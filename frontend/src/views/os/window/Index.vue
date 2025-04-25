@@ -6,9 +6,9 @@
       </span>
     </div>  
     <div class="one-block-2">
-      <a-space>
-        <a-button @click="createWindow(0)">打开哔哩哔哩</a-button>
-      </a-space>
+      <div class="el-space">
+        <el-button @click="createWindow(0)">打开哔哩哔哩</el-button>
+      </div>
     </div>
     <div class="one-block-1">
       <span>
@@ -16,9 +16,9 @@
       </span>
     </div>  
     <div class="one-block-2">
-      <a-space>
-        <a-button @click="createWindow(1)">打开html页面</a-button>
-      </a-space>
+      <div class="el-space">
+        <el-button @click="createWindow(1)">打开html页面</el-button>
+      </div>
     </div>
     <div class="one-block-1">
       <span>
@@ -26,9 +26,9 @@
       </span>
     </div>  
     <div class="one-block-2">
-      <a-space>
-        <a-button @click="createWindow(2)">打开vue页面</a-button>
-      </a-space>
+      <div class="el-space">
+        <el-button @click="createWindow(2)">打开vue页面</el-button>
+      </div>
     </div>    
   </div>
 </template>
@@ -74,4 +74,22 @@ function createWindow(index: number) {
     padding-top: 10px;
   }
 }
-</style>
+
+.el-space {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+.el-space {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+.el-list-item {
+  padding: 12px;
+  border-bottom: 1px solid #ebeef5;
+  display: flex;
+  align-items: center;
+}</style>

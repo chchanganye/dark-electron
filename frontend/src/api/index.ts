@@ -1,4 +1,3 @@
-
 /**
  * Definition of communication channel between main process and rendering process
  * format：controller/filename/method
@@ -50,6 +49,11 @@ const ipcApiRoute = {
     getTheme: 'controller/os/getTheme',
     window1ToWindow2: 'controller/os/window1ToWindow2',
     window2ToWindow1: 'controller/os/window2ToWindow1',
+    windowMinimize: 'controller/os/windowMinimize',
+    windowMaximize: 'controller/os/windowMaximize',
+    windowClose: 'controller/os/windowClose',
+    isWindowMaximized: 'controller/os/isWindowMaximized',
+    windowMove: 'controller/os/windowMove',
   },
 
   // effect

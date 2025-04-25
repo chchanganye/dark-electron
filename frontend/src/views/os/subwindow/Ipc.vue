@@ -6,15 +6,15 @@
       </span>
     </div>  
     <div class="one-block-2">
-      <a-space>
-        <a-button @click="handleInvoke">发送 - 回调</a-button>
+      <div class="el-space">
+        <el-button @click="handleInvoke">发送 - 回调</el-button>
         结果：{{ message1 }}
-      </a-space>
+      </div>
       <p></p>
-      <a-space>
-        <a-button @click="handleInvoke2">发送 - async/await</a-button>
+      <div class="el-space">
+        <el-button @click="handleInvoke2">发送 - async/await</el-button>
         结果：{{ message2 }}
-      </a-space>            
+      </div>            
     </div>   
     <div class="one-block-1">
       <span>
@@ -23,10 +23,10 @@
       </span>
     </div>  
     <div class="one-block-2">
-      <a-space>
-        <a-button @click="handleSendSync">同步消息</a-button>
+      <div class="el-space">
+        <el-button @click="handleSendSync">同步消息</el-button>
         结果：{{ message3 }}
-      </a-space>   
+      </div>   
     </div>        
     <div class="one-block-1">
       <span>
@@ -34,11 +34,11 @@
       </span>
     </div>  
     <div class="one-block-2">
-      <a-space>
-        <a-button @click="sendMsgStart">开始</a-button>
-        <a-button @click="sendMsgStop">结束</a-button>
+      <div class="el-space">
+        <el-button @click="sendMsgStart">开始</el-button>
+        <el-button @click="sendMsgStop">结束</el-button>
         结果：{{ messageString }}
-      </a-space>
+      </div>
     </div>
     <div class="one-block-1">
       <span>
@@ -46,9 +46,9 @@
       </span>
     </div>  
     <div class="one-block-2">
-      <a-space>
-        <a-button @click="sendTosubWindow()">向主窗口发消息</a-button>
-      </a-space>
+      <div class="el-space">
+        <el-button @click="sendTosubWindow()">向主窗口发消息</el-button>
+      </div>
     </div>       
   </div>
 </template>
@@ -56,7 +56,7 @@
 import { ref, onMounted } from 'vue';
 import { ipcApiRoute } from '@/api';
 import { ipc } from '@/utils/ipcRenderer';
-import { message } from 'ant-design-vue';
+import { ElMessage } from 'element-plus';
 
 const messageString = ref('');
 const message1 = ref('');
@@ -79,7 +79,7 @@ function init() {
   // 监听主窗口发来的消息
   ipc.removeAllListeners(ipcApiRoute.os.window1ToWindow2);
   ipc.on(ipcApiRoute.os.window1ToWindow2, (event: any, arg: any) => {
-      message.info(arg);
+      ElMessage.info(arg);
   })  
 }
 
@@ -140,4 +140,22 @@ function sendTosubWindow () {
     padding-top: 10px;
   }
 }
-</style>
+
+.el-space {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+.el-space {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+.el-list-item {
+  padding: 12px;
+  border-bottom: 1px solid #ebeef5;
+  display: flex;
+  align-items: center;
+}</style>

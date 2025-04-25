@@ -1,5 +1,5 @@
-import AppSider from '@/layouts/AppSider'
-import Menu from '@/layouts/Menu'
+import AppSider from '@/layouts/AppSider.vue'
+import Menu from '@/layouts/Menu.vue'
 
 export {
     AppSider, 

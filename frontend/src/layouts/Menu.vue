@@ -1,32 +1,12 @@
 <template>
-  <a-layout id="app-menu">
-    <a-layout-sider
-      theme="light"
-      class="layout-sider"
-    >
-      <a-menu 
-        theme="light" 
-        mode="inline" 
-        :selectedKeys="[current]"
-        @click="changeMenu">
-        <a-menu-item v-for="(menuInfo, subIndex) in menu" :key="subIndex">
-          <router-link :to="{ name: menuInfo.pageName, params: menuInfo.params}">
-            <span>{{ menuInfo.title }}</span>
-          </router-link>
-        </a-menu-item>
-      </a-menu>
-    </a-layout-sider>
-    <a-layout>
-      <a-layout-content>
-        <router-view />
-      </a-layout-content>
-    </a-layout>
-  </a-layout>
+  <div class="app-menu">
+    <router-view />
+  </div>
 </template>
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { MenuCategory, MenuStructure, subMenu } from '@/router/subMenu';
+import { useRouter, useRoute } from 'vue-router';
+import { MenuItem, getSortedMenuItems } from '@/router/subMenu';
 
 const props = defineProps({
   id: {
@@ -36,13 +16,11 @@ const props = defineProps({
 });
 
 const router = useRouter();
-const current = ref<string>('menu_100');
-const menu = ref<MenuCategory>();
+const route = useRoute();
+const currentMenuItem = ref<MenuItem | null>(null);
 
 watch(() => props.id, (newValue: string) => {
   console.log('watch menu id ', newValue);
-  // 切换 appSider 时，重置 current
-  current.value = "menu_100"
   menuHandle();
 });
 
@@ -52,25 +30,23 @@ onMounted(() => {
 
 function menuHandle() {
   console.log('handle menu id:', props.id);
-  const key: keyof MenuStructure = props.id as keyof MenuStructure;
-  menu.value = subMenu[key];
-  const linkInfo = menu.value[current.value];
-  router.push({ name: linkInfo.pageName, params: linkInfo.params });
-}
-
-function changeMenu(e: any) {
-  current.value = e.key;
+  
+  // 获取当前菜单ID对应的菜单项
+  const menuItems = getSortedMenuItems(props.id);
+  
+  if (menuItems && menuItems.length > 0) {
+    currentMenuItem.value = menuItems[0];
+    // 导航到菜单的第一个项
+    router.push(currentMenuItem.value.path);
+  }
 }
 </script>
-<style lang="less" scoped>
-#app-menu {
+<style lang="scss" scoped>
+.app-menu {
   height: 100%;
-  text-align: center;
-  .layout-sider {
-    border-top: 1px solid #e8e8e8;
-    border-right: 1px solid #e8e8e8;
-    background-color: #FAFAFA;
-    overflow: auto;
-  }
+  width: 100%;
+  padding: 20px;
+  background-color: var(--app-bg-primary);
+  color: var(--app-text-primary);
 }
 </style>

@@ -1,0 +1,12 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+
+- 框架使用的electron-egg框架，采用ts语言，前端框架elementPLUS
+- 插件使用：unplugin-vue-components 和 unplugin-auto-import自动导入，禁止再手动导入，依赖插件的自动导入
+- 安装了vite-plugin-pages，自动路由，非必要不需要手动写路由，依赖vite-plugin-pages自动生成路由
+- 和主进程交互使用ipcRenderer.ts中接口，依赖框架的封装ipc通信

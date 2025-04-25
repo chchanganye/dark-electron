@@ -6,9 +6,9 @@
       </span>
     </div>  
     <div class="one-block-2">
-      <a-space>
-        <a-button @click="loginWindow()">切换为登录窗口</a-button>
-      </a-space>
+      <div class="el-space">
+        <el-button @click="loginWindow()">切换为登录窗口</el-button>
+      </div>
     </div>
   </div>
 </template>
@@ -37,5 +37,23 @@ function loginWindow() {
       padding-top: 10px;
   }
 }
-</style>
+
+.el-space {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+.el-space {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+.el-list-item {
+  padding: 12px;
+  border-bottom: 1px solid #ebeef5;
+  display: flex;
+  align-items: center;
+}</style>
   

@@ -1,120 +1,190 @@
-// 子菜单
+// 菜单配置文件 - 支持自动路由
 
+// 菜单项接口
 export interface MenuItem {
-  icon: string;
-  title: string;
-  pageName: string;
-  params: Record<string, any>;
+  icon: string;          // Element Plus 图标名
+  title: string;         // 显示标题
+  path: string;          // 路由路径 (自动路由对应的路径)
+  order?: number;        // 排序 (可选)
+  params?: Record<string, any>; // 路由参数 (可选)
 }
 
-export interface MenuCategory {
-  [key: string]: MenuItem;
+// 主菜单结构
+export interface MainMenu {
+  title: string;         // 主菜单标题
+  icon: string;          // 主菜单图标
+  name: string;          // 对应路由name (自动根据文件夹结构生成)
+  order: number;         // 排序
+  children: MenuItem[]; // 子菜单项
 }
 
-export interface MenuStructure {
-  framework: MenuCategory;
-  os: MenuCategory;
-  effect: MenuCategory;
-  cross: MenuCategory;
-}
-
-export const subMenu: MenuStructure = {
-	framework: {
-		'menu_100' : {
-			icon: 'profile',
-			title: '通信',
-			pageName: 'FrameworkSocketIpc',
-			params: {}
-		},
-		'menu_101' : {
-			icon: 'profile',
-			title: 'http服务',
-			pageName: 'FrameworkSocketHttpServer',
-			params: {}
-		},
-		'menu_102' : {
-			icon: 'profile',
-			title: 'socket服务',
-			pageName: 'FrameworkSocketSocketServer',
-			params: {}
-		},    
-		'menu_104' : {
-			icon: 'profile',
-			title: 'sqlite数据库',
-			pageName: 'FrameworkSqliteDBIndex',
-			params: {}
-		},
-		'menu_105' : {
-			icon: 'profile',
-			title: '任务',
-			pageName: 'FrameworkJobsIndex',
-			params: {}
-		},				  
-		'menu_106' : {
-			icon: 'profile',
-			title: '软件调用',
-			pageName: 'FrameworkSoftwareIndex',
-			params: {}
-		},	
-    'menu_107' : {
-			icon: 'profile',
-			title: '自动更新',
-			pageName: 'FrameworkUpdaterIndex',
-			params: {}
-		},    	                                           
-	},	
-  os: {
-    'menu_100' : {
-        icon: 'profile',
+// 菜单配置
+export const menuConfig: MainMenu[] = [
+  {
+    title: '框架',
+    icon: 'Grid',
+    name: 'framework',
+    order: 1,
+    children: [
+      {
+        icon: 'ChatDotRound',
+        title: 'IPC通信',
+        path: '/framework/socket/ipc',
+        order: 1
+      },
+      {
+        icon: 'Service',
+        title: 'HTTP服务',
+        path: '/framework/socket/httpserver',
+        order: 2
+      },
+      {
+        icon: 'Link',
+        title: 'Socket服务',
+        path: '/framework/socket/socketserver',
+        order: 3
+      },
+      {
+        icon: 'Files',
+        title: 'SQLite数据库',
+        path: '/framework/sqlitedb',
+        order: 4
+      },
+      {
+        icon: 'AlarmClock',
+        title: '任务',
+        path: '/framework/jobs',
+        order: 5
+      },
+      {
+        icon: 'Cpu',
+        title: '软件调用',
+        path: '/framework/software',
+        order: 6
+      },
+      {
+        icon: 'Upload',
+        title: '自动更新',
+        path: '/framework/updater',
+        order: 7
+      }
+    ]
+  },
+  {
+    title: '系统',
+    icon: 'Monitor',
+    name: 'os',
+    order: 2,
+    children: [
+      {
+        icon: 'Document',
         title: '文件',
-        pageName: 'OsFileIndex',
-        params: {}
-    },
-    'menu_102' : {
-        icon: 'profile',
-        title: '窗口',
-        pageName: 'OsWindowIndex',
-        params: {}
-    },
-    'menu_103' : {
-        icon: 'profile',
-        title: '桌面通知',
-        pageName: 'OsNotificationIndex',
-        params: {}
-    },
-    'menu_110' : {
-        icon: 'profile',
+        path: '/os/file',
+        order: 1
+      },
+      {
+        icon: 'Picture',
         title: '图片',
-        pageName: 'OsFilePic',
-        params: {}
-    }, 
-  },  
-  effect: {
-    'menu_100' : {
-      icon: 'profile',
-      title: '登录',
-      pageName: 'EffectLoginIndex',
-      params: {}
-    }                                                
+        path: '/os/file/pic',
+        order: 2
+      },
+      {
+        icon: 'Monitor',
+        title: '窗口',
+        path: '/os/window',
+        order: 3
+      },
+      {
+        icon: 'MessageBox',
+        title: '桌面通知',
+        path: '/os/notification',
+        order: 4
+      }
+    ]
   },
-  cross: {
-    'menu_100' : {
-      icon: 'profile',
-      title: 'go服务',
-      pageName: 'CrossGoIndex',
-      params: {}
-    },
-    'menu_110' : {
-      icon: 'profile',
-      title: 'java服务',
-      pageName: 'CrossJavaIndex',
-      params: {}
-    },
-    'menu_120' : {
-      icon: 'profile',
-      title: 'python服务',
-      pageName: 'CrossPythonIndex',
-      params: {}
-    },                                            
+  {
+    title: '特效',
+    icon: 'MagicStick',
+    name: 'effect',
+    order: 3,
+    children: [
+      {
+        icon: 'User',
+        title: '登录',
+        path: '/effect/login',
+        order: 1
+      }
+    ]
   },
+  {
+    title: '跨平台',
+    icon: 'Connection',
+    name: 'cross',
+    order: 4,
+    children: [
+      {
+        icon: 'Promotion',
+        title: 'Go服务',
+        path: '/cross/go',
+        order: 1
+      },
+      {
+        icon: 'Coffee',
+        title: 'Java服务',
+        path: '/cross/java',
+        order: 2
+      },
+      {
+        icon: 'Share',
+        title: 'Python服务',
+        path: '/cross/python',
+        order: 3
+      }
+    ]
+  },
+  {
+    title: '示例',
+    icon: 'Compass',
+    name: 'demo',
+    order: 5,
+    children: [
+      {
+        icon: 'Flag',
+        title: '自动路由',
+        path: '/demo/auto-route',
+        order: 1
+      },
+      {
+        icon: 'Moon',
+        title: '主题切换',
+        path: '/demo/theme-switch',
+        order: 2
+      }
+    ]
+  }
+];
+
+// 辅助函数：根据路由路径获取菜单项
+export function getMenuItemByPath(path: string): MenuItem | null {
+  for (const mainMenu of menuConfig) {
+    for (const item of mainMenu.children) {
+      if (item.path === path) {
+        return item;
+      }
+    }
+  }
+  return null;
+}
+
+// 辅助函数：获取排序后的主菜单
+export function getSortedMainMenus(): MainMenu[] {
+  return [...menuConfig].sort((a, b) => a.order - b.order);
+}
+
+// 辅助函数：获取排序后的菜单项
+export function getSortedMenuItems(mainMenuName: string): MenuItem[] {
+  const mainMenu = menuConfig.find(menu => menu.name === mainMenuName);
+  if (!mainMenu) return [];
+  
+  return [...mainMenu.children].sort((a, b) => (a.order || 0) - (b.order || 0));
 }

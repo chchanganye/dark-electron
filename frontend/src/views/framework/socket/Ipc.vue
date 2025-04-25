@@ -6,15 +6,14 @@
       </span>
     </div>  
     <div class="one-block-2">
-      <a-space>
-        <a-button @click="handleInvoke">发送 - 回调</a-button>
-        结果：{{ message1 }}
-      </a-space>
-      <p></p>
-      <a-space>
-        <a-button @click="handleInvoke2">发送 - async/await</a-button>
-        结果：{{ message2 }}
-      </a-space>            
+      <div class="operation-row">
+        <el-button @click="handleInvoke">发送 - 回调</el-button>
+        <span class="result-text">结果：{{ message1 }}</span>
+      </div>
+      <div class="operation-row">
+        <el-button @click="handleInvoke2">发送 - async/await</el-button>
+        <span class="result-text">结果：{{ message2 }}</span>
+      </div>            
     </div>   
     <div class="one-block-1">
       <span>
@@ -23,10 +22,10 @@
       </span>
     </div>  
     <div class="one-block-2">
-      <a-space>
-        <a-button @click="handleSendSync">同步消息</a-button>
-        结果：{{ message3 }}
-      </a-space>   
+      <div class="operation-row">
+        <el-button @click="handleSendSync">同步消息</el-button>
+        <span class="result-text">结果：{{ message3 }}</span>
+      </div>   
     </div>        
     <div class="one-block-1">
       <span>
@@ -34,11 +33,11 @@
       </span>
     </div>  
     <div class="one-block-2">
-      <a-space>
-        <a-button @click="sendMsgStart">开始</a-button>
-        <a-button @click="sendMsgStop">结束</a-button>
-        结果：{{ messageString }}
-      </a-space>
+      <div class="operation-row">
+        <el-button @click="sendMsgStart">开始</el-button>
+        <el-button @click="sendMsgStop">结束</el-button>
+        <span class="result-text">结果：{{ messageString }}</span>
+      </div>
     </div>
     <div class="one-block-1">
       <span>
@@ -46,10 +45,10 @@
       </span>
     </div>  
     <div class="one-block-2">
-      <a-space>
-        <a-button @click="createWindow()">打开新窗口2</a-button>
-        <a-button @click="sendTosubWindow()">向新窗口2发消息</a-button>
-      </a-space>
+      <div class="operation-row">
+        <el-button @click="createWindow()">打开新窗口2</el-button>
+        <el-button @click="sendTosubWindow()">向新窗口2发消息</el-button>
+      </div>
     </div>      
   </div>
 </template>
@@ -57,7 +56,7 @@
 import { ipcApiRoute } from '@/api';
 import { ipc } from '@/utils/ipcRenderer';
 import { ref, onMounted } from 'vue';
-import { message } from 'ant-design-vue';
+import { ElMessage } from 'element-plus';
 
 const messageString = ref('');
 const message1 = ref('');
@@ -89,7 +88,7 @@ function init() {
   // 监听 窗口2 发来的消息
   ipc.removeAllListeners(ipcApiRoute.os.window2ToWindow1);
   ipc.on(ipcApiRoute.os.window2ToWindow1, (event: any, arg: any) => {
-    message.info(arg);
+    ElMessage.info(arg);
   })  
 }
 
@@ -153,5 +152,32 @@ async function sendTosubWindow() {
   .one-block-2 {
     padding-top: 10px;
   }
+  .operation-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    
+    .result-text {
+      margin-left: 10px;
+    }
+  }
 }
-</style>
+
+.el-space {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+.el-space {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+.el-list-item {
+  padding: 12px;
+  border-bottom: 1px solid #ebeef5;
+  display: flex;
+  align-items: center;
+}</style>

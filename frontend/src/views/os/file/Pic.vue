@@ -6,13 +6,14 @@
       </span>
     </div>  
     <div class="one-block-2">
-      <a-space>
-          <a-button @click="selectPic()">选择图片</a-button>
-      </a-space>
+      <div class="el-space">
+          <el-button @click="selectPic()">选择图片</el-button>
+      </div>
       <p></p>
-      <a-image
+      <el-image
         :width="500"
-        :src=picPath
+        :src="picPath"
+        fit="contain"
       />
     </div>
   </div>
@@ -42,6 +43,13 @@ function selectPic() {
   .one-block-2 {
       padding-top: 10px;
   }
+}
+
+.el-space {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
 }
 </style>
   

@@ -1,4 +1,6 @@
 import iconFont from './iconFont';
+import TitleBar from '@/components/TitleBar.vue'
+import ThemeSwitch from '@/components/ThemeSwitch.vue'
 
 // Use import.meta.globEager to dynamically import all .vue files in the directory
 const modules: { [key: string]: { default: any } } = import.meta.glob('./*.vue', { eager: true });
@@ -14,6 +16,8 @@ Object.keys(modules).forEach(file => {
 const globalComponents = {
   ...map,
   iconFont,
+  TitleBar,
+  ThemeSwitch
 };
 
 export default globalComponents;

@@ -1,0 +1,26 @@
+/* 主题变量文件 */
+
+/* 导入亮色主题 */
+@use './light-theme.scss';
+
+/* 导入暗色主题 */
+@use './dark-theme.scss';
+
+/* 公共变量，不受主题影响 */
+:root {
+  /* 布局相关变量 */
+  --app-sidebar-width: 260px;
+  --app-header-height: 52px;
+  
+  /* 过渡动画 */
+  --app-transition-time: 0.3s;
+  
+  /* 阴影 */
+  --app-shadow-light: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  --app-shadow-dark: 0 2px 12px 0 rgba(0, 0, 0, 0.2);
+  
+  /* z-index层级 */
+  --app-z-index-normal: 1;
+  --app-z-index-popup: 1000;
+  --app-z-index-header: 900;
+} 

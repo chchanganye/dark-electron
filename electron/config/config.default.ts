@@ -16,7 +16,7 @@ const config: () => AppConfig = () => {
         contextIsolation: false,
         nodeIntegration: true,
       },
-      frame: true,
+      frame: false,
       show: false,
       icon: path.join(getBaseDir(), 'public', 'images', 'logo-32.png'),
     },

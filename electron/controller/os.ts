@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { app as electronApp, dialog, shell } from 'electron';
+import { app as electronApp, dialog, shell, BrowserWindow } from 'electron';
 import { windowService } from '../service/os/window';
 
 /**
@@ -161,6 +161,69 @@ class OsController {
 
     return true
   }   
+
+  /**
+   * 窗口最小化
+   */
+  windowMinimize(): boolean {
+    const win = BrowserWindow.getFocusedWindow();
+    if (win) {
+      win.minimize();
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * 检查窗口是否最大化
+   */
+  isWindowMaximized(): boolean {
+    const win = BrowserWindow.getFocusedWindow();
+    if (win) {
+      return win.isMaximized();
+    }
+    return false;
+  }
+
+  /**
+   * 窗口最大化/还原
+   */
+  windowMaximize(): boolean {
+    const win = BrowserWindow.getFocusedWindow();
+    if (win) {
+      if (win.isMaximized()) {
+        win.unmaximize();
+      } else {
+        win.maximize();
+      }
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * 关闭窗口
+   */
+  windowClose(): boolean {
+    const win = BrowserWindow.getFocusedWindow();
+    if (win) {
+      win.close();
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * 移动窗口
+   */
+  windowMove(args: { posX: number; posY: number }): boolean {
+    const win = BrowserWindow.getFocusedWindow();
+    if (win) {
+      win.setPosition(args.posX, args.posY);
+      return true;
+    }
+    return false;
+  }
 }
 OsController.toString = () => '[class OsController]';
 

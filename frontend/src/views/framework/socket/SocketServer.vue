@@ -6,9 +6,9 @@
       </span>
     </div>
     <div class="one-block-2">
-      <a-space>
+      <div class="el-space">
         <p>* 状态：{{ currentStatus }}</p>
-      </a-space>
+      </div>
       <p>* 地址：{{ servicAddress }}</p>
     </div>
     <div class="one-block-1">
@@ -17,9 +17,9 @@
       </span>
     </div>    
     <div class="one-block-2">
-      <a-space>
-        <a-button @click="sendRequest('downloads')"> 打开【我的下载】 </a-button>
-      </a-space>
+      <div class="el-space">
+        <el-button @click="sendRequest('downloads')"> 打开【我的下载】 </el-button>
+      </div>
     </div>
   </div>
 </template>
@@ -27,7 +27,7 @@
 import { ipcApiRoute } from '@/api';
 import { io } from 'socket.io-client';
 import { ref, onMounted } from 'vue';
-import { message } from 'ant-design-vue';
+import { ElMessage } from 'element-plus';
 
 const currentStatus = ref('关闭');
 const servicAddress = ref('ws://localhost:7070');
@@ -49,7 +49,7 @@ function init() {
 
 function sendRequest(id: string) {
   if (currentStatus.value == '关闭') {
-    message.error('socketio服务未开启');
+    ElMessage.error('socketio服务未开启');
     return;
   }
 
@@ -73,4 +73,22 @@ function sendRequest(id: string) {
     padding-top: 10px;
   }
 }
-</style>
+
+.el-space {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+.el-space {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+.el-list-item {
+  padding: 12px;
+  border-bottom: 1px solid #ebeef5;
+  display: flex;
+  align-items: center;
+}</style>

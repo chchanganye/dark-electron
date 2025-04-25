@@ -10,10 +10,10 @@
       </span>
     </div>  
     <div class="one-block-2">
-      <a-space>
+      <div class="el-space">
         {{ soft }}
-        <a-button @click="openSoft">执行</a-button>
-      </a-space>
+        <el-button @click="openSoft">执行</el-button>
+      </div>
     </div>
   </div>
 </template>
@@ -21,14 +21,14 @@
 import { ipcApiRoute } from '@/api';
 import { ipc } from '@/utils/ipcRenderer';
 import { ref } from 'vue';
-import { message } from 'ant-design-vue';
+import { ElMessage } from 'element-plus';
 
 const soft = ref('powershell.exe');
 
 function openSoft() { 
   ipc.invoke(ipcApiRoute.framework.openSoftware, {softName: soft.value}).then((result: any) => {
     if (!result) {
-      message.error('程序不存在');
+      ElMessage.error('程序不存在');
     }
   })       
 }
@@ -49,4 +49,22 @@ function openSoft() {
     padding-top: 10px;
   }
 }
-</style>
+
+.el-space {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+.el-space {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+.el-list-item {
+  padding: 12px;
+  border-bottom: 1px solid #ebeef5;
+  display: flex;
+  align-items: center;
+}</style>

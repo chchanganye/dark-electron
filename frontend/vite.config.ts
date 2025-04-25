@@ -1,22 +1,41 @@
-import vue from '@vitejs/plugin-vue';
-import { defineConfig } from 'vite';
-import viteCompression from 'vite-plugin-compression';
-import path from 'path';
+import vue from '@vitejs/plugin-vue'
+import { defineConfig } from 'vite'
+import AutoImport from 'unplugin-auto-import/vite'
+import Components from 'unplugin-vue-components/vite'
+import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import Pages from 'vite-plugin-pages'
 
-export default defineConfig((mode) => {
+import path from 'path'
+// https://vitejs.dev/config/
+export default defineConfig(() => {
   return {
-    // Project plugins
+    // 项目插件
     plugins: [
       vue(),
-      viteCompression({
-        verbose: true,
-        disable: false,
-        threshold: 1025,
-        algorithm: 'gzip',
-        ext: '.gz',
+      AutoImport({
+        resolvers: [ElementPlusResolver()],
+        // 自动导入Vue API和组件
+        imports: [
+          'vue',
+          'vue-router'
+        ],
+        // 可以选择是否自动导入directives
+        dirs: ['src/composables', 'src/utils'],
+        // 声明文件生成位置
+        dts: 'auto-imports.d.ts'
       }),
+      Components({
+        resolvers: [ElementPlusResolver()],
+        dts: 'components.d.ts'
+      }),
+      Pages({
+        dirs: 'src/views',
+        extensions: ['vue','ts'],
+        importMode: 'async',   // 路由懒加载
+        exclude: ['**/components/**'],
+      })
     ],
-    // Base configuration
+    // 基础配置
     base: './',
     publicDir: 'public',
     resolve: {
@@ -41,14 +60,14 @@ export default defineConfig((mode) => {
       cssCodeSplit: true,
       brotliSize: false,
       sourcemap: false,
-      minify: 'terser',
+      minify: 'terser' as const,
       terserOptions: {
         compress: {
-          // Remove console and debugger in production
+          // 生产环境去除console及debug
           drop_console: false,
           drop_debugger: true,
         },
       },
     },
-  };
-});
+  }
+})

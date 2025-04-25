@@ -1,0 +1,53 @@
+/* Element Plus 暗色主题变量 */
+html.dark {
+  /* 背景颜色系列 */
+  --el-bg-color: #2b2a33 !important;                /* 主背景色-深灰紫色 */
+  --el-bg-color-overlay: #33303e !important;        /* 悬浮菜单背景-中灰紫 */
+  --el-bg-color-page: #201e2a !important;           /* 页面背景-暗灰紫色 */
+  --app-bg-primary: #2b2a33 !important;             /* 主背景色-深灰紫 */
+  --app-bg-secondary: #33303e !important;           /* 侧边栏背景-中灰紫 */
+  --app-bg-gradient: linear-gradient(180deg, #383644 0%, #2b2a33 100%) !important; /* 侧边栏渐变 */
+  --el-fill-color: #33303e !important;              /* 填充色-中灰紫 */
+  --el-fill-color-light: #3e3a4c !important;        /* 浅填充色-浅灰紫 */
+  --el-fill-color-blank: #252430 !important;        /* 空白填充-灰紫 */
+  --el-disabled-bg-color: #2a2934 !important;       /* 禁用背景-灰紫 */
+  --el-input-bg-color: #3e3a4c !important;          /* 输入框背景-浅灰紫 */
+
+  /* 主题颜色系列 */
+  --el-color-primary: #6c5b7b !important;           /* 主色-灰紫色 */
+  --el-color-success: #49aa19 !important;
+  --el-color-warning: #d89614 !important;
+  --el-color-danger: #a61d24 !important;
+  --el-color-error: #a61d24 !important;
+  --el-color-info: #a6a6a6 !important;
+  --app-accent-color: #8962a9 !important;           /* 强调色-灰紫色 */
+  --app-hover-color: #a782c7 !important;            /* 悬浮色-浅灰紫 */
+  --app-active-color: #6c5b7b !important;           /* 激活色-灰紫 */
+
+  /* 文字颜色系列 */
+  --el-text-color-primary: #f0f0f0 !important;      /* 主要文本-近白 */
+  --el-text-color-regular: #d9d9d9 !important;      /* 常规文本-浅灰 */
+  --el-text-color-secondary: #a6a6a6 !important;    /* 次要文本-中灰 */
+  --el-text-color-placeholder: #737373 !important;  /* 占位符-深灰 */
+  --el-text-color-disabled: #595959 !important;     /* 禁用文本-黑灰 */
+  --app-text-primary: #f0f0f0 !important;           /* 主文本-近白 */
+  --app-text-secondary: #d9d9d9 !important;         /* 次要文本-浅灰 */
+
+  /* 边框相关 */
+  --el-border-radius-base: 4px !important;
+  --el-border-color: #434343 !important;            /* 标准边框色-深灰 */
+  --el-border-color-light: #383644 !important;      /* 浅边框色-灰紫 */
+  --el-input-border-color: #383644 !important;      /* 输入框边框-灰紫 */
+  --app-border-color: #434343 !important;           /* 边框色-深灰 */
+
+  /* 菜单样式 */
+  --el-menu-bg-color: transparent !important;       /* 菜单背景-透明 */
+  --el-menu-hover-bg-color: #3e3a4c !important;     /* 菜单悬浮色-浅灰紫 */
+  --el-menu-active-color: #a474cc !important;       /* 菜单激活文本色-灰紫 */
+  --el-menu-text-color: #d9d9d9 !important;         /* 菜单文本-浅灰 */
+  --el-menu-hover-text-color: #f0f0f0 !important;   /* 菜单悬浮文本-近白 */
+  --el-menu-item-height: 50px !important;
+
+  /* 布局尺寸 */
+  --app-header-height: 52px !important;             /* 标题栏高度 */
+} 

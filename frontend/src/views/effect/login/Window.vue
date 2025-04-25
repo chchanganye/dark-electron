@@ -2,9 +2,9 @@
   <div id="effect-login-window">
     <div class="block-1">
       <a v-if="!loading" @click="login">
-        <a-button type="primary">
+        <el-button type="primary">
           登录
-        </a-button>
+        </el-button>
       </a>
       <span v-else>{{ loginText }}</span>
     </div>  
@@ -41,5 +41,23 @@ const login = () => {
     display: inline-block;
   }
 }
-</style>
+
+.el-space {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+.el-space {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+.el-list-item {
+  padding: 12px;
+  border-bottom: 1px solid #ebeef5;
+  display: flex;
+  align-items: center;
+}</style>
   

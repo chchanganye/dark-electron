@@ -6,17 +6,17 @@
       </span>
     </div>  
     <div class="one-block-2">
-      <a-row>
-        <a-col :span="8">
+      <el-row>
+        <el-col :span="8">
           • 大数据量: 0-1024GB(单库)
-        </a-col>
-        <a-col :span="8">
+        </el-col>
+        <el-col :span="8">
           • 高性能
-        </a-col>
-        <a-col :span="8">
+        </el-col>
+        <el-col :span="8">
           • 类mysql语法
-        </a-col>
-      </a-row>
+        </el-col>
+      </el-row>
     </div>
     <div class="one-block-1">
       <span>
@@ -24,23 +24,25 @@
       </span>
     </div>  
     <div class="one-block-2">
-      <a-row>
-        <a-col :span="12">
-          <a-input v-model="data_dir" :value="data_dir" addon-before="数据目录" />
-        </a-col>
-        <a-col :span="2">
-        </a-col>
-        <a-col :span="5">
-          <a-button @click="selectDir()">
+      <el-row>
+        <el-col :span="12">
+          <el-input v-model="data_dir" :value="data_dir">
+            <template #prefix>数据目录</template>
+          </el-input>
+        </el-col>
+        <el-col :span="2">
+        </el-col>
+        <el-col :span="5">
+          <el-button @click="selectDir()">
             修改目录
-          </a-button>
-        </a-col>
-        <a-col :span="5">
-          <a-button @click="openDir()">
+          </el-button>
+        </el-col>
+        <el-col :span="5">
+          <el-button @click="openDir()">
             打开目录
-          </a-button>
-        </a-col>        
-      </a-row>
+          </el-button>
+        </el-col>        
+      </el-row>
     </div>     
     <div class="one-block-1">
       <span>
@@ -48,11 +50,11 @@
       </span>
     </div>  
     <div class="one-block-2">
-      <a-row>
-        <a-col :span="24">
+      <el-row>
+        <el-col :span="24">
           {{ all_list }}
-        </a-col>
-      </a-row>
+        </el-col>
+      </el-row>
     </div>    
     <div class="one-block-1">
       <span>
@@ -60,23 +62,27 @@
       </span>
     </div>  
     <div class="one-block-2">
-      <a-row>
-        <a-col :span="6">
-          <a-input v-model="name" :value="name" addon-before="姓名" />
-        </a-col>
-        <a-col :span="3">
-        </a-col>
-        <a-col :span="6">
-          <a-input v-model="age" :value="age" addon-before="年龄" />
-        </a-col>
-        <a-col :span="3">
-        </a-col>
-        <a-col :span="6">
-          <a-button @click="sqlitedbOperation('add')">
+      <el-row>
+        <el-col :span="6">
+          <el-input v-model="name" :value="name">
+            <template #prefix>姓名</template>
+          </el-input>
+        </el-col>
+        <el-col :span="3">
+        </el-col>
+        <el-col :span="6">
+          <el-input v-model="age" :value="age">
+            <template #prefix>年龄</template>
+          </el-input>
+        </el-col>
+        <el-col :span="3">
+        </el-col>
+        <el-col :span="6">
+          <el-button @click="sqlitedbOperation('add')">
             添加
-          </a-button>
-        </a-col>
-      </a-row>
+          </el-button>
+        </el-col>
+      </el-row>
     </div>
     <div class="one-block-1">
       <span>
@@ -84,28 +90,30 @@
       </span>
     </div>  
     <div class="one-block-2">
-      <a-row>
-        <a-col :span="6">
+      <el-row>
+        <el-col :span="6">
           <!-- eslint-disable-next-line vue/no-v-model-argument -->
-          <a-input v-model:value="search_age" addon-before="年龄" />
-        </a-col>
-        <a-col :span="3">
-        </a-col>
-        <a-col :span="6">
-        </a-col>
-        <a-col :span="3">
-        </a-col>
-        <a-col :span="6">
-          <a-button @click="sqlitedbOperation('get')">
+          <el-input v-model:value="search_age">
+            <template #prefix>年龄</template>
+          </el-input>
+        </el-col>
+        <el-col :span="3">
+        </el-col>
+        <el-col :span="6">
+        </el-col>
+        <el-col :span="3">
+        </el-col>
+        <el-col :span="6">
+          <el-button @click="sqlitedbOperation('get')">
             查找
-          </a-button>
-        </a-col>
-      </a-row>
-      <a-row>
-        <a-col :span="24">
+          </el-button>
+        </el-col>
+      </el-row>
+      <el-row>
+        <el-col :span="24">
           {{ userList }}
-        </a-col>
-      </a-row>
+        </el-col>
+      </el-row>
     </div>
     <div class="one-block-1">
       <span>
@@ -113,25 +121,29 @@
       </span>
     </div>  
     <div class="one-block-2">
-      <a-row>
-        <a-col :span="6">
+      <el-row>
+        <el-col :span="6">
           <!-- eslint-disable-next-line vue/no-v-model-argument -->
-          <a-input v-model:value="update_name" addon-before="姓名(条件)" />
-        </a-col>
-        <a-col :span="3">
-        </a-col>
-        <a-col :span="6">
+          <el-input v-model:value="update_name">
+            <template #prefix>姓名(条件)</template>
+          </el-input>
+        </el-col>
+        <el-col :span="3">
+        </el-col>
+        <el-col :span="6">
           <!-- eslint-disable-next-line vue/no-v-model-argument -->
-          <a-input v-model:value="update_age" addon-before="年龄" />
-        </a-col>
-        <a-col :span="3">
-        </a-col>
-        <a-col :span="6">
-          <a-button @click="sqlitedbOperation('update')">
+          <el-input v-model:value="update_age">
+            <template #prefix>年龄</template>
+          </el-input>
+        </el-col>
+        <el-col :span="3">
+        </el-col>
+        <el-col :span="6">
+          <el-button @click="sqlitedbOperation('update')">
             更新
-          </a-button>
-        </a-col>
-      </a-row>
+          </el-button>
+        </el-col>
+      </el-row>
     </div>
     <div class="one-block-1">
       <span>
@@ -139,23 +151,25 @@
       </span>
     </div>  
     <div class="one-block-2">
-      <a-row>
-        <a-col :span="6">
+      <el-row>
+        <el-col :span="6">
           <!-- eslint-disable-next-line vue/no-v-model-argument -->
-          <a-input v-model:value="delete_name" addon-before="姓名" />
-        </a-col>
-        <a-col :span="3">
-        </a-col>
-        <a-col :span="6">
-        </a-col>
-        <a-col :span="3">
-        </a-col>
-        <a-col :span="6">
-          <a-button @click="sqlitedbOperation('del')">
+          <el-input v-model:value="delete_name">
+            <template #prefix>姓名</template>
+          </el-input>
+        </el-col>
+        <el-col :span="3">
+        </el-col>
+        <el-col :span="6">
+        </el-col>
+        <el-col :span="3">
+        </el-col>
+        <el-col :span="6">
+          <el-button @click="sqlitedbOperation('del')">
             删除
-          </a-button>
-        </a-col>
-      </a-row>
+          </el-button>
+        </el-col>
+      </el-row>
     </div>       
   </div>
 </template>
@@ -163,7 +177,7 @@
 import { ipcApiRoute } from '@/api';
 import { ipc } from '@/utils/ipcRenderer';
 import { ref, onMounted } from 'vue';
-import { message } from 'ant-design-vue';
+import { ElMessage } from 'element-plus';
 
 const name = ref('李四');
 const age = ref(20);
@@ -185,7 +199,7 @@ function init() {
   }
   ipc.invoke(ipcApiRoute.framework.sqlitedbOperation, params).then((res: any) => {
     if (res.code == -1) {
-      message.error('请检查sqlite是否正确安装', 5);
+      ElMessage.error('请检查sqlite是否正确安装');
       return
     }
 
@@ -242,13 +256,13 @@ function sqlitedbOperation (ac: string) {
     delete_name: delete_name.value,
   }
   if (ac == 'add' && name.value.length == 0) {
-    message.error(`请填写数据`);
+    ElMessage.error(`请填写数据`);
   }
   ipc.invoke(ipcApiRoute.framework.sqlitedbOperation, params).then((res: any) => {
     console.log('res:', res);
     if (ac == 'get') {
       if (res.result.length == 0) {
-        message.error(`没有数据`);
+        ElMessage.error(`没有数据`);
         return;
       }
       userList.value = res.result;
@@ -258,7 +272,7 @@ function sqlitedbOperation (ac: string) {
       return;
     }
     all_list.value = res.all_list;
-    message.success(`success`);
+    ElMessage.success(`success`);
   }) 
 }
 </script>
@@ -275,4 +289,22 @@ function sqlitedbOperation (ac: string) {
     padding-top: 10px;
   }
 }
-</style>
+
+.el-space {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+.el-space {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
+}
+.el-list-item {
+  padding: 12px;
+  border-bottom: 1px solid #ebeef5;
+  display: flex;
+  align-items: center;
+}</style>
