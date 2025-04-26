@@ -7,11 +7,11 @@ const config: () => AppConfig = () => {
     openDevTools: false,
     singleLock: true,
     windowsOption: {
-      title: 'electron-egg',
-      width: 980,
-      height: 650,
-      minWidth: 400,
-      minHeight: 300,
+      title: '抖音全能工具箱-商业版',
+      width: 320,
+      height: 400,
+      minWidth: 320,
+      minHeight: 400,
       webPreferences: {
         contextIsolation: false,
         nodeIntegration: true,

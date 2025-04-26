@@ -6,9 +6,11 @@ import './assets/global.scss';
 import './assets/theme.scss';
 
 // 导入Element Plus暗黑模式CSS（确保在我们自定义主题后引入，避免覆盖）
+import 'element-plus/dist/index.css'
 import 'element-plus/theme-chalk/dark/css-vars.css';
 import components from './components/global';
 import Router from './router/index';
+import { createPinia } from 'pinia';
 
 // 导入所有Element Plus图标
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
@@ -32,4 +34,4 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component);
 }
 
-app.use(Router).mount('#app')
+app.use(Router).use(createPinia()).mount('#app')

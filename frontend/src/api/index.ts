@@ -27,7 +27,7 @@ const ipcApiRoute = {
     createPoolNotice: 'controller/framework/createPoolNotice',
     someJobByPool: 'controller/framework/someJobByPool',
     hello: 'controller/framework/hello',
-    openSoftware: 'controller/framework/openSoftware', 
+    openSoftware: 'controller/framework/openSoftware',
   },
 
   // os
@@ -61,6 +61,9 @@ const ipcApiRoute = {
     selectFile: 'controller/effect/selectFile',
     loginWindow: 'controller/effect/loginWindow',
     restoreWindow: 'controller/effect/restoreWindow',
+    register: 'controller/effect/register',
+    login: 'controller/effect/login',
+    autoLogin: 'controller/effect/autoLogin',
   },
 
   // cross
@@ -82,7 +85,7 @@ const specialIpcRoute = {
 }
 
 export {
-  ipcApiRoute, 
+  ipcApiRoute,
   specialIpcRoute
 }
 

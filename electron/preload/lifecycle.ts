@@ -36,13 +36,11 @@ class Lifecycle {
 
     const win = getMainWindow();
 
-    // The window is centered and scaled proportionally
-    // Obtain the size information of the main screen, calculate the width and height of the window as a percentage of the screen, 
-    // and calculate the coordinates of the upper left corner when the window is centered
+    // 设置窗口为400*320并居中
     const mainScreen = screen.getPrimaryDisplay();
     const { width, height } = mainScreen.workAreaSize;
-    const windowWidth = Math.floor(width * 0.6);
-    const windowHeight = Math.floor(height * 0.8);
+    const windowWidth = 320;
+    const windowHeight = 440;
     const x = Math.floor((width - windowWidth) / 2);
     const y = Math.floor((height - windowHeight) / 2);
     win.setBounds({ x, y, width: windowWidth, height: windowHeight });
