@@ -6,9 +6,15 @@
     <div class="title-spacer"></div>
     <div class="title-right">
       <template v-if="!onlyClose">
-        <div class="user-avatar">
-          <el-avatar size="small" src="https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png" />
-        </div>
+        <UserProfilePopup 
+          v-model:visible="showUserProfile" 
+          :avatar-url="avatarUrl"
+          @logout="handleLogout"
+        >
+          <div class="user-avatar">
+            <el-avatar size="small" :src="avatarUrl" />
+          </div>
+        </UserProfilePopup>
         <div class="divider"></div>
         <div class="theme-toggle" @click="() => toggleDarkMode()">
           <el-icon v-if="isDark" class="icon-theme"><Sunny /></el-icon>
@@ -30,22 +36,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, defineProps } from 'vue';
+import { ref, onMounted, onBeforeUnmount, defineProps, defineEmits } from 'vue';
 import { ipcApiRoute } from '@/api';
 import { ipc } from '@/utils/ipcRenderer';
 import { isDark, toggleDark } from '@/utils/theme';
+import UserProfilePopup from '@/components/UserProfilePopup.vue';
+import { useUserStore } from '@/store/user';
 
 const props = defineProps({
   onlyClose: {
     type: Boolean,
     default: false
+  },
+  avatarUrl: {
+    type: String,
+    default: 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
   }
 });
 
+const emit = defineEmits(['logout']);
+
+const userStore = useUserStore();
 const isMaximized = ref(false);
 const isDown = ref(false);
 const baseX = ref(0);
 const baseY = ref(0);
+const showUserProfile = ref(false);
 
 // 切换暗黑模式
 function toggleDarkMode() {
@@ -67,6 +83,11 @@ function maximize() {
 // 关闭窗口
 function close() {
   ipc.invoke(ipcApiRoute.os.windowClose);
+}
+
+// 处理用户登出
+function handleLogout() {
+  emit('logout');
 }
 
 // 开始拖动

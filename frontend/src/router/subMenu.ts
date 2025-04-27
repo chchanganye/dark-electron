@@ -1,4 +1,5 @@
 // 菜单配置文件 - 支持自动路由
+import { isDev } from 'ee-core/ps';
 
 // 菜单项接口
 export interface MenuItem {
@@ -15,8 +16,12 @@ export interface MainMenu {
   icon: string;          // 主菜单图标
   name: string;          // 对应路由name (自动根据文件夹结构生成)
   order: number;         // 排序
+  visible?: boolean;     // 是否显示菜单
   children: MenuItem[]; // 子菜单项
 }
+
+// 获取开发环境状态
+const isDevMode = isDev();
 
 // 菜单配置
 export const menuConfig: MainMenu[] = [
@@ -25,6 +30,7 @@ export const menuConfig: MainMenu[] = [
     icon: 'Grid',
     name: 'framework',
     order: 1,
+    visible: isDevMode, // 仅在开发环境显示
     children: [
       {
         icon: 'ChatDotRound',
@@ -75,6 +81,7 @@ export const menuConfig: MainMenu[] = [
     icon: 'Monitor',
     name: 'os',
     order: 2,
+    visible: isDevMode, // 仅在开发环境显示
     children: [
       {
         icon: 'Document',
@@ -107,6 +114,7 @@ export const menuConfig: MainMenu[] = [
     icon: 'MagicStick',
     name: 'effect',
     order: 3,
+    visible: isDevMode, // 仅在开发环境显示
     children: [
       {
         icon: 'User',
@@ -121,6 +129,7 @@ export const menuConfig: MainMenu[] = [
     icon: 'Connection',
     name: 'cross',
     order: 4,
+    visible: isDevMode, // 仅在开发环境显示
     children: [
       {
         icon: 'Promotion',
@@ -147,6 +156,7 @@ export const menuConfig: MainMenu[] = [
     icon: 'Compass',
     name: 'demo',
     order: 5,
+    visible: isDevMode, // 仅在开发环境显示
     children: [
       {
         icon: 'Flag',
@@ -178,13 +188,15 @@ export function getMenuItemByPath(path: string): MenuItem | null {
 
 // 辅助函数：获取排序后的主菜单
 export function getSortedMainMenus(): MainMenu[] {
-  return [...menuConfig].sort((a, b) => a.order - b.order);
+  return [...menuConfig]
+    .filter(menu => menu.visible !== false) // 过滤不显示的菜单
+    .sort((a, b) => a.order - b.order);
 }
 
 // 辅助函数：获取排序后的菜单项
 export function getSortedMenuItems(mainMenuName: string): MenuItem[] {
   const mainMenu = menuConfig.find(menu => menu.name === mainMenuName);
-  if (!mainMenu) return [];
+  if (!mainMenu || mainMenu.visible === false) return [];
   
   return [...mainMenu.children].sort((a, b) => (a.order || 0) - (b.order || 0));
 }

@@ -76,72 +76,81 @@ const cardKey = ref('');
 const isRegister = ref(false);
 const showRegister = ref(false);
 const autoLogin = ref(false);
-const AUTO_LOGIN_CHANNEL = 'controller/effect/autoLogin';
 const userStore = useUserStore();
 
 onMounted(async () => {
-  // 记住账号
-  const remembered = localStorage.getItem('rememberedAccount');
-  rememberAccount.value = !!remembered;
-  if (remembered) {
-    username.value = remembered;
+  // 从 pinia 获取记住账号
+  rememberAccount.value = !!userStore.rememberedAccount;
+  if (userStore.rememberedAccount) {
+    username.value = userStore.rememberedAccount;
   }
-  // 自动登录
-  autoLogin.value = localStorage.getItem('autoLogin') === '1';
+  // 从 pinia 获取自动登录
+  autoLogin.value = userStore.autoLogin;
   // 自动登录逻辑
   if (autoLogin.value) {
-    const userId = localStorage.getItem('userId');
-    const accessToken = localStorage.getItem('accessToken');
-    const refreshToken = localStorage.getItem('refreshToken');
-    if (!userId || !accessToken || !refreshToken || userId === 'undefined' || accessToken === 'undefined' || refreshToken === 'undefined' || userId === '' || accessToken === '' || refreshToken === '') {
-      console.log('自动登录取消，userId:', userId, 'accessToken:', accessToken, 'refreshToken:', refreshToken);
+    loading.value = true;
+    if (!userStore.userInfo?.id || !userStore.appTokens?.access || !userStore.appTokens?.refresh) {
+      console.log('自动登录取消，用户信息或令牌不完整');
       autoLogin.value = false;
-      localStorage.removeItem('autoLogin');
+      userStore.setAutoLogin(false);
+      loading.value = false;
       return;
     }
-    const result = await ipc.invoke(AUTO_LOGIN_CHANNEL, { userId, accessToken });
-    if (result?.success) {
-      userStore.setLogin(result.user, result.tokens);
-      router.push('/framework/socket/ipc');
-      ipc.invoke(ipcApiRoute.effect.restoreWindow, { width: 980, height: 650 });
+    const result = await ipc.invoke(ipcApiRoute.effect.autoLogin, { 
+      userId: userStore.userInfo.id, 
+      accessToken: userStore.appTokens.access 
+    });
+    if (result?.code === 200) {
+      // 保存用户信息(包含权限)、token到store
+      // 权限字段会被保存在内存中，但不会被持久化到本地存储
+      console.log('自动登录成功', result.data);
+      userStore.setLogin(result.data.user);
+      setTimeout(() => {
+        router.push('/framework/socket/ipc');
+        ipc.invoke(ipcApiRoute.effect.restoreWindow, { width: 980, height: 650 });
+        ElMessage.success('登录成功');
+      }, 1000);
+    } else {
+      ElMessage.error(result?.message || '自动登录失败,请手动登录');
+      loading.value = false;
     }
   }
 });
 
 const login = async () => {
   loading.value = true;
-  const result = await ipc.invoke(ipcApiRoute.effect.login, {
-    username: username.value,
-    password: password.value
-  });
-  if(result?.success){
-    userStore.setLogin(result.user, result.tokens);
-    // 保存完整user信息
-    localStorage.setItem('userId', result.user?.id);
-    localStorage.setItem('accessToken', result.tokens?.access);
-    localStorage.setItem('refreshToken', result.tokens?.refresh);
-    localStorage.setItem('userInfo', JSON.stringify(result.user));
-    localStorage.setItem('tokens', JSON.stringify(result.tokens));
-    if (rememberAccount.value) {
-      localStorage.setItem('rememberedAccount', username.value);
+  try {
+    const result = await ipc.invoke(ipcApiRoute.effect.login, {
+      username: username.value,
+      password: password.value
+    });
+
+    if (result?.code === 200) {
+      // 保存用户信息(包含权限)、token到store
+      // 权限字段会被保存在内存中，但不会被持久化到本地存储
+      console.log('登录成功', result.data);
+      userStore.setLogin(result.data.user, result.data.tokens);
+      
+      if (rememberAccount.value) {
+        userStore.setRememberedAccount(username.value);
+      } else {
+        userStore.setRememberedAccount('');
+      }
+      
+      userStore.setAutoLogin(autoLogin.value);
+      
+      ElMessage.success(result.message);
+      setTimeout(() => {
+        router.push('/framework/socket/ipc');
+        ipc.invoke(ipcApiRoute.effect.restoreWindow, { width: 980, height: 650 });
+      }, 1000);
     } else {
-      localStorage.removeItem('rememberedAccount');
+      ElMessage.error(result?.message || '登录失败');
     }
-    if (autoLogin.value) {
-      localStorage.setItem('autoLogin', '1');
-    } else {
-      localStorage.removeItem('autoLogin');
-    }
-    ElMessage.success('登录成功');
-    setTimeout(() => {
-      router.push('/framework/socket/ipc');
-      ipc.invoke(ipcApiRoute.effect.restoreWindow, { width: 980, height: 650 })
-    }, 1000);
-  }else{
-    ElMessage.error(result?.message);
-    setTimeout(() => {
-      loading.value = false;
-    }, 200);
+  } catch (error) {
+    ElMessage.error('登录请求异常');
+  } finally {
+    loading.value = false;
   }
 }
 
@@ -195,24 +204,20 @@ function handleAfterLeave() {
 
 watch(rememberAccount, (val) => {
   if (val) {
-    localStorage.setItem('rememberedAccount', username.value);
+    userStore.setRememberedAccount(username.value);
   } else {
-    localStorage.removeItem('rememberedAccount');
+    userStore.setRememberedAccount('');
   }
 });
 
 watch(username, (val) => {
   if (rememberAccount.value) {
-    localStorage.setItem('rememberedAccount', val);
+    userStore.setRememberedAccount(val);
   }
 });
 
 watch(autoLogin, (val) => {
-  if (val) {
-    localStorage.setItem('autoLogin', '1');
-  } else {
-    localStorage.removeItem('autoLogin');
-  }
+  userStore.setAutoLogin(val);
 });
 </script>
 

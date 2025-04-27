@@ -29,7 +29,8 @@
         "debug-dev": "cross-env DEBUG=ee-* ee-bin dev",
         "debug-encrypt": "ee-bin encrypt",
         "debug-electron": "cross-env DEBUG=ee-* ee-bin dev --serve=electron",
-        "debug-move": "ee-bin move --flag=frontend_dist"
+        "debug-move": "ee-bin move --flag=frontend_dist",
+        "test": "jest"
     },
     "repository": "https://github.com/dromara/electron-egg.git",
     "keywords": [
@@ -42,19 +43,24 @@
     "devDependencies": {
         "@electron/rebuild": "^3.7.1",
         "@types/better-sqlite3": "^7.6.12",
+        "@types/jest": "^29.5.14",
         "@types/node": "^20.16.0",
         "cross-env": "^7.0.3",
         "debug": "^4.4.0",
         "ee-bin": "^4.1.7",
         "electron": "^31.7.6",
         "electron-builder": "^25.1.8",
-        "typescript": "^5.4.2"
+        "jest": "^29.7.0",
+        "ts-jest": "^29.3.2",
+        "typescript": "^5.4.2",
+        "vitest": "^3.1.2"
     },
     "dependencies": {
         "axios": "^1.7.9",
         "better-sqlite3": "^11.7.0",
         "dayjs": "^1.11.13",
         "ee-core": "^4.1.2",
-        "electron-updater": "^6.3.8"
+        "electron-updater": "^6.3.8",
+        "pinia-plugin-persistedstate": "^4.2.0"
     }
 }

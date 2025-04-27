@@ -4,23 +4,9 @@ import axios from 'axios';
 
 // effect service
 class EffectService {
-
-  // hello
-  async hello(args: any): Promise<{ status: string; params: any }> {
-    let obj = {
-      status:'ok',
-      params: args
-    }
-    logger.info('EffectService obj:', obj);
-
-    return obj;
-  }
-
-  async register(args: { username: string; nickname: string; password: string; card_key: string }): Promise<{ success: boolean; message: string }> {
+  async register(args: { username: string; nickname: string; password: string; card_key: string }) {
     const config = getConfig();
-    logger.info('服务器地址', config.serverUrl);
     const url = `${config.serverUrl}/api/users/register/`;
-    logger.info('注册地址', url);
     try {
       const response = await axios.post(url, {
         username: args.username,
@@ -28,18 +14,14 @@ class EffectService {
         password: args.password,
         card_key: args.card_key
       });
-      if (response.status === 201) {
-        return { success: true, message: '注册成功' };
-      } else {
-        return { success: false, message: response.data?.message || '注册失败' };
-      }
+      return response.data;
     } catch (error: any) {
       logger.error('注册请求异常', error?.response?.data || error);
-      return { success: false, message: error?.response?.data?.message || '注册异常' };
+      return error?.response?.data || { code: 500, message: '注册异常' };
     }
   }
 
-  async login(args: { username: string; password: string }): Promise<{ success: boolean; message: string; data?: any }> {
+  async login(args: { username: string; password: string }) {
     const config = getConfig();
     const url = `${config.serverUrl}/api/users/login/`;
     try {
@@ -47,36 +29,42 @@ class EffectService {
         username: args.username,
         password: args.password
       });
-      logger.info('登录响应', response.data);
-      if (response.status === 200) {
-        return { success: true, message: '登录成功', data: response.data };
-      } else {
-        return { success: false, message: response.data?.message || '登录失败' };
-      }
+      return response.data;
     } catch (error: any) {
       logger.error('登录请求异常', error?.response?.data || error);
-      return { success: false, message: error?.response?.data?.message || '登录异常' };
+      return error?.response?.data || { code: 500, message: '登录异常' };
     }
   }
 
-  async autoLogin(args: { userId: string; accessToken: string }): Promise<{ success: boolean; message: string; data?: any }> {
+  /**
+   * 自动登录验证
+   * @param args - 包含用户ID和访问令牌
+   */
+  async autoLogin(args: { userId: string; accessToken: string }) {
     const config = getConfig();
-    const url = `${config.serverUrl}/api/users/${args.userId}/balance/`;
+    const url = `${config.serverUrl}/api/verify_token/`;
     try {
-      const response = await axios.get(url, {
-        headers: {
-          Authorization: `Bearer ${args.accessToken}`
+      const response = await axios.post(
+        url,
+        {}, // POST body为空
+        {
+          headers: {
+            Authorization: `Bearer ${args.accessToken}`
+          }
         }
-      });
-      if (response.status === 200) {
-        return { success: true, message: '自动登录成功', data: response.data };
-      } else {
-        return { success: false, message: response.data?.message || '自动登录失败' };
-      }
+      );
+      // 直接返回后端的标准结构
+      return response.data;
     } catch (error: any) {
-      logger.error('autoLogin参数 userId:', args.userId, 'accessToken:', args.accessToken);
       logger.error('自动登录请求异常', error?.response?.data || error);
-      return { success: false, message: error?.response?.data?.message || '自动登录异常' };
+      // 兼容后端返回的错误结构
+      return (
+        error?.response?.data || {
+          code: 500,
+          message: '自动登录异常',
+          data: null
+        }
+      );
     }
   }
 }

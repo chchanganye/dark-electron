@@ -38,7 +38,7 @@
     </div>
 
     <div class="main-content">
-      <TitleBar />
+      <TitleBar :avatar-url="userAvatarUrl" @logout="handleLogout" />
       <div class="layout-content">
         <router-view />
       </div>
@@ -54,14 +54,23 @@ import {
   getMenuItemByPath
 } from '@/router/subMenu';
 import TitleBar from '@/components/TitleBar.vue';
+import { useUserStore } from '@/store/user';
+import { ElMessage } from 'element-plus';
 
 const router = useRouter();
 const route = useRoute();
+const userStore = useUserStore();
 const collapsed = ref<boolean>(false);
 const activeMenuItem = ref<string>('');
 
 // 获取排序后的主菜单
 const sortedMainMenus = computed(() => getSortedMainMenus());
+
+// 计算用户头像URL
+const userAvatarUrl = computed(() => {
+  // UserInfo接口中没有avatar属性，使用默认头像
+  return 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png';
+});
 
 onMounted(() => {
   // 根据当前路由设置激活菜单
@@ -101,6 +110,13 @@ function menuItemSelect(path: string) {
     // 直接导航到指定路径
     router.push(path);
   }
+}
+
+// 处理用户登出
+function handleLogout() {
+  userStore.logout();
+  ElMessage.success('已退出登录');
+  router.push('/effect/login/window');
 }
 </script>
 <style lang="scss" scoped>
@@ -166,15 +182,24 @@ function menuItemSelect(path: string) {
         line-height: 38px;
         border-radius: 6px;
         width: calc(100% - 24px);
+<<<<<<< Updated upstream
         position: relative;
 
+=======
+        
+>>>>>>> Stashed changes
         &:hover {
           background-color: var(--el-menu-hover-bg-color);
         }
 
         &.is-active {
+<<<<<<< Updated upstream
           background-color: var(--el-menu-hover-bg-color);
           position: relative;
+=======
+          background-color: var(--app-menu-selected-bg, var(--el-menu-hover-bg-color));
+          color: var(--el-menu-active-color);
+>>>>>>> Stashed changes
         }
       }
 
@@ -203,15 +228,6 @@ function menuItemSelect(path: string) {
   }
 }
 
-@keyframes rotate {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
 :deep(.dark-submenu) {
   background-color: var(--app-bg-secondary) !important;
 
@@ -222,17 +238,26 @@ function menuItemSelect(path: string) {
     border-radius: 6px;
     width: calc(100% - 24px);
     padding-left: 30px !important;
+<<<<<<< Updated upstream
     position: relative;
 
+=======
+    
+>>>>>>> Stashed changes
     &:hover {
       background-color: var(--el-menu-hover-bg-color);
       color: var(--app-text-primary);
     }
 
     &.is-active {
+<<<<<<< Updated upstream
       background-color: var(--el-menu-hover-bg-color);
       color: var(--app-text-primary);
       position: relative;
+=======
+      background-color: var(--app-menu-selected-bg, var(--el-menu-hover-bg-color));
+      color: var(--el-menu-active-color);
+>>>>>>> Stashed changes
     }
   }
 }

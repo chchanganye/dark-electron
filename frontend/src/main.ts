@@ -11,6 +11,7 @@ import 'element-plus/theme-chalk/dark/css-vars.css';
 import components from './components/global';
 import Router from './router/index';
 import { createPinia } from 'pinia';
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
 
 // 导入所有Element Plus图标
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
@@ -18,7 +19,9 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 // 导入并初始化主题状态
 import './utils/theme';
 
-const app = createApp(App)
+const app = createApp(App);
+const pinia = createPinia();
+pinia.use(piniaPluginPersistedstate);
 
 // 注册全局组件
 type ComponentsType = typeof components;
@@ -34,4 +37,4 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component);
 }
 
-app.use(Router).use(createPinia()).mount('#app')
+app.use(Router).use(pinia).mount('#app');
