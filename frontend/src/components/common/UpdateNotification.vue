@@ -38,9 +38,10 @@ import { ref, onMounted, onUnmounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import { ipc } from '@/utils/ipcRenderer';
 import { ipcApiRoute, specialIpcRoute } from '@/api';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 
 const router = useRouter();
+const route = useRoute();
 const updateDialogVisible = ref(false);
 const newVersion = ref('');
 const currentVersion = ref('');
@@ -84,6 +85,9 @@ function setupListeners() {
           console.log('是自动检查更新，显示弹窗');
           showUpdateDialog();
         }
+      } else if (result.status === -1) {
+        // 在登录页面，提示用户先激活
+        ElMessage.warning(result.desc);
       }
     } catch (error) {
       console.error('处理更新消息出错:', error);
@@ -94,10 +98,15 @@ function setupListeners() {
   ipc.on('show-update-notification', (event, data) => {
     console.log('收到系统通知:', data);
     // 收到通知后显示弹窗
-    if (data.version) {
-      newVersion.value = data.version;
+    if (data.status === 1 && data.newVersion) {
+      newVersion.value = data.newVersion;
+      releaseDate.value = data.releaseDate;
+      currentVersion.value = data.oldVersion;
+      showUpdateDialog();
+    } else if (data.status === -1) {
+      // 在登录页面，提示用户先激活
+      ElMessage.warning(data.desc);
     }
-    showUpdateDialog();
   });
 }
 
@@ -131,6 +140,16 @@ function closeDialog() {
 
 // 下载并安装更新
 function downloadAndInstall() {
+  // 检查当前路由，如果是登录页面则不允许跳转
+  const currentPath = route.path;
+  const isLoginPage = currentPath === '/login' || currentPath === '/special/login' || currentPath.includes('/effect/login');
+  
+  if (isLoginPage) {
+    ElMessage.warning('请先完成激活后再进行更新');
+    updateDialogVisible.value = false;
+    return;
+  }
+  
   updateDialogVisible.value = false;
   
   // 跳转到更新页面

@@ -412,7 +412,7 @@ function getRecordStatusType(row) {
   if (row.isDisabled) {
     return 'warning'; // 暂停状态显示黄色
   }
-  return row.recordStatus ? 'success' : 'info';
+  return (recorderRunning.value && !row.isDisabled) ? 'success' : 'info';
 }
 
 // 获取录制状态文本
@@ -420,7 +420,7 @@ function getRecordStatusText(row) {
   if (row.isDisabled) {
     return '录制暂停';
   }
-  return row.recordStatus ? '录制中' : '未录制';
+  return (recorderRunning.value && !row.isDisabled) ? '录制中' : '未录制';
 }
 
 // 组件挂载时

@@ -31,6 +31,26 @@ class AutoUpdaterService {
     }
 
     /**
+     * 检查当前路由是否为登录页面
+     * @returns {Promise<boolean>} 是否为登录页面
+     */
+    async checkIsLoginPage() {
+        try {
+            const win = getMainWindow();
+            if (!win) return false;
+            
+            const result = await win.webContents.executeJavaScript(`
+                window.location.pathname === '/login' || 
+                window.location.pathname === '/effect/login'
+            `);
+            return result;
+        } catch (error) {
+            logger.error('[autoUpdater] 检查路由失败:', error);
+            return false;
+        }
+    }
+
+    /**
      * 创建自动更新服务
      */
     create() {
@@ -193,8 +213,21 @@ class AutoUpdaterService {
      * 检查更新
      * @param {boolean} isAutoCheck 是否为自动检查（默认为false，手动检查）
      */
-    checkUpdate(isAutoCheck = false) {
+    async checkUpdate(isAutoCheck = false) {
         try {
+            // 检查当前路由
+            const isLoginPage = await this.checkIsLoginPage();
+            if (isLoginPage) {
+                logger.info('[autoUpdater] 当前在登录页面，暂不检查更新');
+                const data = {
+                    status: -1,
+                    desc: '请先完成激活后再检查更新',
+                    oldVersion: electronApp.getVersion()
+                };
+                this.sendStatusToWindow(data);
+                return;
+            }
+
             // 在调用checkForUpdates之前设置forceDevUpdateConfig属性
             if (!electronApp.isPackaged) {
                 logger.info('[autoUpdater] 开发环境检查更新');

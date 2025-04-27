@@ -113,13 +113,39 @@ onMounted(async () => {
   await getDeviceFingerprint();
 
   try {
+    // 显示加载状态
+    loading.value = true;
+    loginText.value = '正在检查激活状态...';
+    
     // 调用后端检查是否已存在激活信息
     const result = await ipc.invoke(ipcApiRoute.effect.checkActivation);
+    
+    console.log('检查激活状态结果:', result);
+    
     if (result && result.status === 'success') {
-      // 如果已激活，自动进行登录
-      login();
+      // 已激活，显示登录成功消息
+      loginText.value = '验证成功，正在登录...';
+      
+      ElMessage({
+        message: '自动登录成功',
+        type: 'success',
+        duration: 1500
+      });
+      
+      // 跳转到主界面
+      setTimeout(() => {
+        router.push({ name: 'Framework'});
+        ipc.invoke(ipcApiRoute.effect.restoreWindow, {width: 1280, height: 720})
+      }, 1500);
+    } else {
+      // 未激活或验证失败，显示手动输入界面
+      loading.value = false;
+      if (result && result.message) {
+        console.log('激活状态信息:', result.message);
+      }
     }
   } catch (error) {
+    loading.value = false;
     console.error('检查激活信息出错:', error);
   }
 });
@@ -146,6 +172,12 @@ const login = async () => {
     return;
   }
 
+  // 检查是否输入了激活码
+  if (!activationCode.value) {
+    errorMsg.value = '请输入激活码';
+    return;
+  }
+
   errorMsg.value = '';
   loading.value = true;
   loginText.value = '正在验证...';
@@ -159,21 +191,39 @@ const login = async () => {
     if (result && result.status === 'success') {
       // 验证成功
       loginText.value = '验证成功，正在登录...';
+      
+      ElMessage({
+        message: '激活成功，即将登录',
+        type: 'success',
+        duration: 1500
+      });
 
-      // 使用原有的登录逻辑进行跳转
+      // 跳转到主界面
       setTimeout(() => {
         router.push({ name: 'Framework'});
         ipc.invoke(ipcApiRoute.effect.restoreWindow, {width: 1280, height: 720})
-      }, 2000);
+      }, 1500);
     } else {
       // 验证失败
       loading.value = false;
       errorMsg.value = result?.message || '激活码验证失败';
+      
+      ElMessage({
+        message: errorMsg.value,
+        type: 'error',
+        duration: 2000
+      });
     }
   } catch (error) {
     loading.value = false;
     errorMsg.value = '验证过程中出现错误';
     console.error('激活验证出错:', error);
+    
+    ElMessage({
+      message: '验证过程中出现错误',
+      type: 'error',
+      duration: 2000
+    });
   }
 }
 

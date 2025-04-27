@@ -15,8 +15,21 @@ const crypto = require('crypto');
 class EffectService {
 
     constructor() {
-        // 激活信息存储路径
-        this.activationFilePath = path.join(app.getPath('userData'), 'activation.json');
+        // 激活信息存储路径 - 修改为保存在data目录
+        const dataDir = path.join(app.getPath('userData'), 'data');
+        
+        // 确保data目录存在
+        if (!fs.existsSync(dataDir)) {
+            try {
+                fs.mkdirSync(dataDir, { recursive: true });
+                logger.info('创建data目录成功:', dataDir);
+            } catch (error) {
+                logger.error('创建data目录失败:', error);
+            }
+        }
+        
+        this.activationFilePath = path.join(dataDir, 'activation.json');
+        logger.info('激活信息存储路径:', this.activationFilePath);
     }
 
     /**
@@ -192,10 +205,18 @@ class EffectService {
                 activatedAt: new Date().toISOString()
             };
 
+            // 确保目录存在
+            const dirPath = path.dirname(this.activationFilePath);
+            if (!fs.existsSync(dirPath)) {
+                fs.mkdirSync(dirPath, { recursive: true });
+            }
+
             fs.writeFileSync(this.activationFilePath, JSON.stringify(activationInfo, null, 2), 'utf8');
-            logger.info('激活信息已保存');
+            logger.info('激活信息已保存到:', this.activationFilePath);
+            return true;
         } catch (error) {
             logger.error('保存激活信息出错:', error);
+            return false;
         }
     }
 
@@ -228,6 +249,7 @@ class EffectService {
 
             // 如果没有激活信息，返回未激活
             if (!activationInfo) {
+                logger.info('未找到激活信息');
                 return {
                     status: 'fail',
                     message: '未激活'
@@ -239,20 +261,21 @@ class EffectService {
 
             // 比较设备指纹是否匹配
             if (activationInfo.deviceFingerprint !== currentFingerprint) {
-                logger.warn('设备指纹不匹配');
+                logger.warn('设备指纹不匹配, 保存的指纹:', activationInfo.deviceFingerprint, '当前指纹:', currentFingerprint);
                 return {
                     status: 'fail',
                     message: '设备已变更，需要重新激活'
                 };
             }
 
+            logger.info('设备指纹匹配，自动验证激活码');
             // 设备指纹匹配，验证激活码
             return await this._verifyWithApi(activationInfo.activationCode, currentFingerprint);
         } catch (error) {
-            logger.error('检查激活状态出错:', error);
+            logger.error('检查激活信息出错:', error);
             return {
                 status: 'fail',
-                message: error.message || '检查激活状态失败'
+                message: error.message || '检查激活状态出错'
             };
         }
     }

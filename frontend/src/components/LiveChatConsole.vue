@@ -91,7 +91,7 @@
       </div>
 
       <div class="console-content" :class="{ 'console-content-active': activeTab === 'voiceAssistant' }" v-show="activeTab === 'voiceAssistant'">
-        <div v-for="(log, index) in voiceAssistantLogs" :key="'voice-'+index" class="log-item">
+        <div v-for="(log, index) in voiceAssistantLogs" :key="'voice-'+index" class="voice-log-item">
           {{ log.time }} {{ log.message }}
         </div>
       </div>
@@ -1060,6 +1060,17 @@ defineExpose({
       white-space: pre-wrap;
       word-break: break-all;
       line-height: 1.3;
+    }
+
+    .voice-log-item {
+      padding: 3px;
+      border-bottom: 1px solid #eee;
+      font-family: monospace;
+      white-space: pre-wrap;
+      word-break: break-all;
+      line-height: 1.3;
+      text-align: left;
+      margin-left: 5px;
     }
   }
 

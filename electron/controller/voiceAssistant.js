@@ -12,6 +12,7 @@ const { voiceAssistantService } = require('../service/voiceAssistant');
  */
 class VoiceAssistantController {
     constructor() {
+        // 直接使用单例
         this.voiceAssistantService = voiceAssistantService;
     }
 
@@ -179,11 +180,8 @@ class VoiceAssistantController {
                 return this.fail(`文件不存在: ${filePath}`);
             }
 
-            // 获取voiceAssistantService实例
-            const { voiceAssistantService } = require('../service/voiceAssistant');
-
             // 调用服务层播放音频
-            const result = voiceAssistantService.playSingleAudio(filePath, {
+            const result = this.voiceAssistantService.playSingleAudio(filePath, {
                 volume: volume || 0.8,
                 playbackRate: playbackRate || 1.0,
                 deviceId: deviceId || ''
@@ -214,11 +212,8 @@ class VoiceAssistantController {
 
             logger.info(`尝试打开音频组文件夹: ${groupName}`);
 
-            // 获取voiceAssistantService实例
-            const { voiceAssistantService } = require('../service/voiceAssistant');
-
             // 调用服务层打开文件夹
-            const result = await voiceAssistantService.openAudioGroupFolder(groupName);
+            const result = await this.voiceAssistantService.openAudioGroupFolder(groupName);
             if (result) {
                 return this.success('打开文件夹成功');
             } else {
@@ -288,6 +283,130 @@ class VoiceAssistantController {
         } catch (error) {
             logger.error(`启动语音助手失败: ${error.message}`);
             return this.fail(`启动语音助手失败: ${error.message}`);
+        }
+    }
+
+    /**
+     * 播放指定子文件夹中的随机音频
+     * @param {Object} args - 参数
+     * @param {string} args.subFolderPath - 子文件夹路径（相对于主音频组）
+     * @returns {Object} - 操作结果
+     */
+    async playSubFolderAudio(args) {
+        try {
+            const { subFolderPath } = args || {};
+            if (!subFolderPath) {
+                return this.fail('缺少必要参数: subFolderPath');
+            }
+
+            logger.info(`尝试播放子文件夹音频: ${subFolderPath}`);
+            const result = await this.voiceAssistantService.playSubFolderAudio(subFolderPath);
+            
+            if (result.code === 0) {
+                return this.success('开始播放音频', result.data);
+            } else {
+                return this.fail(result.message);
+            }
+        } catch (error) {
+            logger.error(`播放子文件夹音频失败: ${error.message}`);
+            return this.fail(`播放子文件夹音频失败: ${error.message}`);
+        }
+    }
+
+    /**
+     * 获取音频文件时长
+     * @param {Object} args - 参数对象
+     * @param {string} args.filePath - 文件路径
+     * @returns {Object} - 响应对象
+     */
+    async getDuration(args) {
+        try {
+            const { filePath } = args;
+            if (!filePath) {
+                return this.fail('文件路径不能为空');
+            }
+
+            const result = await this.voiceAssistantService.getAudioDuration(filePath);
+            if (result.code === 0) {
+                return this.success('获取音频时长成功', result.data);
+            } else {
+                return this.fail(result.message);
+            }
+        } catch (error) {
+            logger.error('获取音频时长失败:', error);
+            return this.fail('获取音频时长失败: ' + error.message);
+        }
+    }
+
+    /**
+     * 获取报时和人数音频组
+     */
+    async getBroadcastGroups() {
+        try {
+            const result = await this.voiceAssistantService.getBroadcastGroups();
+            return this.success('获取报时和人数音频组成功', result);
+        } catch (error) {
+            logger.error(`获取报时和人数音频组失败: ${error.message}`);
+            return this.fail(`获取报时和人数音频组失败: ${error.message}`);
+        }
+    }
+
+    /**
+     * 播放插播音频
+     * @param {Object} args - 参数
+     * @param {string} args.type - 插播类型：time(时间) 或 viewers(人数)
+     * @param {number} args.hour - 小时数（仅type=time时使用）
+     * @param {number} args.minute - 分钟数（仅type=time时使用）
+     * @param {number} args.viewers - 观看人数（仅type=viewers时使用）
+     * @param {string} args.timeGroupPath - 时间音频组路径（仅type=time时使用）
+     * @param {string} args.viewerGroupPath - 人数音频组路径（仅type=viewers时使用）
+     * @param {string} args.deviceId - 设备ID
+     * @param {number} args.playbackRate - 播放速度
+     */
+    async playBroadcast(args) {
+        try {
+            const { type, hour, minute, viewers, timeGroupPath, viewerGroupPath, deviceId, playbackRate } = args || {};
+            
+            if (!type) {
+                return this.fail('缺少必要参数: type');
+            }
+            
+            if (type === 'time') {
+                if (hour === undefined || minute === undefined) {
+                    return this.fail('播放时间插播需要提供hour和minute参数');
+                }
+                
+                if (!timeGroupPath) {
+                    return this.fail('缺少必要参数: timeGroupPath');
+                }
+                
+                const result = await this.voiceAssistantService.playTimeBroadcast(hour, minute, timeGroupPath, deviceId, playbackRate);
+                if (result) {
+                    return this.success('播放时间插播成功');
+                } else {
+                    return this.fail('播放时间插播失败');
+                }
+            } else if (type === 'viewers') {
+                if (viewers === undefined) {
+                    return this.fail('播放人数插播需要提供viewers参数');
+                }
+                
+                if (!viewerGroupPath) {
+                    return this.fail('缺少必要参数: viewerGroupPath');
+                }
+                
+                const result = await this.voiceAssistantService.playViewersBroadcast(viewers, viewerGroupPath, deviceId, playbackRate);
+                if (result) {
+                    return this.success('播放人数插播成功');
+                } else {
+                    return this.fail('播放人数插播失败');
+                }
+            } else {
+                return this.fail(`不支持的插播类型: ${type}`);
+            }
+        } catch (error) {
+            logger.error(`播放插播音频失败: ${error.message}`);
+            return this.fail(`播放插播音频失败: ${error.message}`);
         }
     }
 

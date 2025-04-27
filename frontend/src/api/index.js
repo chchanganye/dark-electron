@@ -118,6 +118,10 @@ const ipcApiRoute = {
         getAudioDevices: 'controller/voiceAssistant/getAudioDevices',
         updateAudioDevice: 'controller/voiceAssistant/updateAudioDevice',
         openAudioGroupFolder: 'controller/voiceAssistant/openAudioGroupFolder',
+        getDuration: 'controller/voiceAssistant/getDuration',
+        playSubFolderAudio: 'controller/voiceAssistant/playSubFolderAudio',
+        getBroadcastGroups: 'controller/voiceAssistant/getBroadcastGroups',
+        playBroadcast: 'controller/voiceAssistant/playBroadcast',
     },
 
     // 数据库相关API
@@ -156,6 +160,37 @@ const ipcApiRoute = {
  */
 const specialIpcRoute = {
     appUpdater: 'custom/app/updater', // updater channel
+}
+
+export const voiceAssistantApi = {
+    getDuration: (filePath) => {
+        return ipc.invoke(ipcApiRoute.voiceAssistant.getDuration, { filePath });
+    },
+    playSubFolderAudio: (subFolderPath) => {
+        return ipc.invoke(ipcApiRoute.voiceAssistant.playSubFolderAudio, { subFolderPath });
+    },
+    getBroadcastGroups: () => {
+        return ipc.invoke(ipcApiRoute.voiceAssistant.getBroadcastGroups);
+    },
+    playTimeBroadcast: (hour, minute, timeGroupPath, deviceId, playbackRate) => {
+        return ipc.invoke(ipcApiRoute.voiceAssistant.playBroadcast, {
+            type: 'time',
+            hour,
+            minute,
+            timeGroupPath,
+            deviceId,
+            playbackRate
+        });
+    },
+    playViewersBroadcast: (viewers, viewerGroupPath, deviceId, playbackRate) => {
+        return ipc.invoke(ipcApiRoute.voiceAssistant.playBroadcast, {
+            type: 'viewers',
+            viewers,
+            viewerGroupPath,
+            deviceId,
+            playbackRate
+        });
+    },
 }
 
 export {

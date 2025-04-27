@@ -16,8 +16,6 @@
 
 <script>
 import { ref, provide, onMounted, onBeforeUnmount, nextTick } from 'vue';
-import { ipc } from '@/utils/ipcRenderer';
-import { ipcApiRoute } from '@/api';
 import LiveChatConsole from '@/components/LiveChatConsole.vue';
 
 export default {
