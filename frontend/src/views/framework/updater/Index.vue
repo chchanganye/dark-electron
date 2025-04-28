@@ -4,7 +4,7 @@
       <span>
         1. 自动更新
       </span>
-    </div>  
+    </div>
     <div class="one-block-2">
       <div class="el-space">
         <el-button @click="checkForUpdater()">检查更新</el-button>
@@ -15,7 +15,7 @@
       <span>
         2. 下载进度
       </span>
-    </div>  
+    </div>
     <div class="one-block-2">
       <el-progress :percentage="percentNumber" :stroke-width="15" />
       <div class="el-space">
@@ -100,4 +100,3 @@ function download () {
   display: flex;
   align-items: center;
 }</style>
-  

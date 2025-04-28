@@ -4,6 +4,7 @@ import { ref, computed } from 'vue';
 interface UserInfo {
   id: number;
   username: string;
+  nickname: string;
   balance: number;
   card_expire: string;
   permissions?: string[]; // 权限ID列表
@@ -82,17 +83,17 @@ export const useUserStore = defineStore('user', () => {
    */
   function hasPermission(permission: string): boolean {
     if (!isLogin.value || !userInfo.value) return false;
-    
+
     // 先检查权限ID
     if (userInfo.value.permissions?.includes(permission)) {
       return true;
     }
-    
+
     // 再检查权限名称
     if (userInfo.value.permission_names?.includes(permission)) {
       return true;
     }
-    
+
     return false;
   }
 
@@ -103,12 +104,12 @@ export const useUserStore = defineStore('user', () => {
     appTokens,
     rememberedAccount,
     autoLogin,
-    
+
     // 计算属性
     isAuthenticated,
     currentUser,
     currentTokens,
-    
+
     // 方法
     setLogin,
     setRememberedAccount,
@@ -122,7 +123,7 @@ export const useUserStore = defineStore('user', () => {
     debug: true,
     key: 'doyinmaster-user-store',
     storage: localStorage,
-    pick: ['userInfo', 'appTokens', 'rememberedAccount', 'autoLogin'],
+    pick: ['userInfo', 'appTokens', 'rememberedAccount', 'autoLogin', 'nickname'],
     omit: ['isLogin', 'userInfo.permissions', 'userInfo.permission_names']
   }
 });

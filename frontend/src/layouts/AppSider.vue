@@ -4,7 +4,7 @@
       <div class="logo">
         <img class="pic-logo" src="~@/assets/logo.png">
       </div>
-      <el-scrollbar>
+      <el-scrollbar class="menu-scrollbar">
         <el-menu
           :default-active="activeMenuItem"
           :collapse="collapsed"
@@ -132,36 +132,36 @@ function handleLogout() {
     width: var(--app-sidebar-width);
     height: 100vh;
     background: var(--app-bg-gradient);
-    overflow: hidden;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
 
     .logo {
-      height: var(--app-header-height);
+      height: 100px;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding-top: 50px;
-      margin-bottom: 10px;
+      padding-top: 30px;
+      margin-bottom: 0;
+      z-index: 2;
+      background: transparent;
     }
 
     .pic-logo {
-      height: 50px;//logo大小
+      height: 50px;
     }
 
-    .el-scrollbar {
+    .menu-scrollbar {
       flex: 1;
-
-      :deep(.el-scrollbar__view) {
-        height: 100%;
-      }
+      height: calc(100vh - 100px);
+      overflow: hidden;
     }
 
     .app-menu {
       height: 100%;
       background: transparent;
       border-right: none;
-      padding-top: 30px;//菜单和logo的距离
+      padding-top: 0;
 
       :deep(.el-sub-menu__title) {
         padding-left: 20px;
@@ -182,24 +182,15 @@ function handleLogout() {
         line-height: 38px;
         border-radius: 6px;
         width: calc(100% - 24px);
-<<<<<<< Updated upstream
         position: relative;
 
-=======
-        
->>>>>>> Stashed changes
         &:hover {
           background-color: var(--el-menu-hover-bg-color);
         }
 
         &.is-active {
-<<<<<<< Updated upstream
           background-color: var(--el-menu-hover-bg-color);
           position: relative;
-=======
-          background-color: var(--app-menu-selected-bg, var(--el-menu-hover-bg-color));
-          color: var(--el-menu-active-color);
->>>>>>> Stashed changes
         }
       }
 
@@ -238,26 +229,17 @@ function handleLogout() {
     border-radius: 6px;
     width: calc(100% - 24px);
     padding-left: 30px !important;
-<<<<<<< Updated upstream
     position: relative;
 
-=======
-    
->>>>>>> Stashed changes
     &:hover {
       background-color: var(--el-menu-hover-bg-color);
       color: var(--app-text-primary);
     }
 
     &.is-active {
-<<<<<<< Updated upstream
       background-color: var(--el-menu-hover-bg-color);
       color: var(--app-text-primary);
       position: relative;
-=======
-      background-color: var(--app-menu-selected-bg, var(--el-menu-hover-bg-color));
-      color: var(--el-menu-active-color);
->>>>>>> Stashed changes
     }
   }
 }

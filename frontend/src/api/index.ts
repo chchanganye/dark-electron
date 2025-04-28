@@ -73,6 +73,18 @@ const ipcApiRoute = {
     killCrossServer: 'controller/cross/killServer',
     createCrossServer: 'controller/cross/createServer',
     requestApi: 'controller/cross/requestApi',
+  },
+
+  // userInfo
+  userInfo: {
+    updateNickname: 'controller/userInfo/updateNickname',
+  },
+
+  // autoUpdater
+  autoUpdater: {
+    checkForUpdater: 'controller/autoUpdater/checkForUpdater',
+    downloadApp: 'controller/autoUpdater/downloadApp',
+    getAppVersion: 'controller/autoUpdater/getAppVersion',
   }
 }
 

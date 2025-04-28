@@ -27,20 +27,18 @@ declare module 'vue' {
     ElInput: typeof import('element-plus/es')['ElInput']
     ElMenu: typeof import('element-plus/es')['ElMenu']
     ElMenuItem: typeof import('element-plus/es')['ElMenuItem']
-<<<<<<< Updated upstream
     ElPopover: typeof import('element-plus/es')['ElPopover']
-=======
->>>>>>> Stashed changes
     ElProgress: typeof import('element-plus/es')['ElProgress']
     ElRow: typeof import('element-plus/es')['ElRow']
     ElScrollbar: typeof import('element-plus/es')['ElScrollbar']
-    ElStatistic: typeof import('element-plus/es')['ElStatistic']
     ElSubMenu: typeof import('element-plus/es')['ElSubMenu']
     ElTag: typeof import('element-plus/es')['ElTag']
+    ElTooltip: typeof import('element-plus/es')['ElTooltip']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     ThemeSwitch: typeof import('./src/components/ThemeSwitch.vue')['default']
     TitleBar: typeof import('./src/components/TitleBar.vue')['default']
+    UpdateNotification: typeof import('./src/components/UpdateNotification.vue')['default']
     UserProfilePopup: typeof import('./src/components/UserProfilePopup.vue')['default']
   }
 }

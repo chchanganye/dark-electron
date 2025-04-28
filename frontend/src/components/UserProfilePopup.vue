@@ -9,7 +9,7 @@
     <template #reference>
       <slot></slot>
     </template>
-    
+
     <div class="user-profile-content">
       <div class="user-profile-header">
         <div class="user-avatar">
@@ -17,10 +17,12 @@
         </div>
         <div class="user-info">
           <div class="user-nickname">
-            <span>{{ userStore.userInfo?.username || '未登录' }}</span>
-            <el-button type="primary" text size="small" class="edit-btn" @click="handleEditNickname">
-              <el-icon><Edit /></el-icon>
-            </el-button>
+            <span>{{ userStore.userInfo?.nickname || '未登录' }}</span>
+            <el-tooltip content="这是昵称，仅用于展示，不是用户名" placement="bottom">
+              <el-button type="primary" text size="small" class="edit-btn" @click="handleEditNickname">
+                <el-icon><Edit /></el-icon>
+              </el-button>
+            </el-tooltip>
           </div>
           <div class="user-email">
             <template v-if="userStore.userInfo && (userStore.userInfo as any).email">
@@ -34,7 +36,7 @@
           </div>
         </div>
       </div>
-      
+
       <div class="user-profile-body">
         <div class="info-item">
           <span class="label"><el-icon style="margin-right:2px;"><Wallet /></el-icon>余额</span>
@@ -45,7 +47,7 @@
           <span class="value">{{ formatDate(userStore.userInfo?.card_expire) }}</span>
         </div>
       </div>
-      
+
       <div class="user-profile-footer">
         <div class="menu-item" @click="handleLogout">
           <el-icon><SwitchButton /></el-icon>
@@ -54,7 +56,7 @@
       </div>
     </div>
   </el-popover>
-  
+
   <el-dialog
     v-model="nicknameDialogVisible"
     title="修改昵称"
@@ -66,7 +68,7 @@
     <template #footer>
       <span class="dialog-footer">
         <el-button @click="nicknameDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="saveNickname">确认</el-button>
+        <el-button type="primary" @click="updateNickname">确认</el-button>
       </span>
     </template>
   </el-dialog>
@@ -77,6 +79,8 @@
     width="340px"
     destroy-on-close
     append-to-body
+    class="email-dialog"
+    center
   >
     <el-form label-width="70px" style="margin-top:10px;">
       <el-form-item label="邮箱">
@@ -99,7 +103,7 @@
 <script setup lang="ts">
 import { ref, defineProps, defineEmits, computed, watch } from 'vue';
 import { useUserStore } from '@/store/user';
-import { ElMessage } from 'element-plus';
+import { ElMessage, resultProps } from 'element-plus';
 import { ipcApiRoute } from '@/api';
 import { ipc } from '@/utils/ipcRenderer';
 import { Wallet, Calendar, Message } from '@element-plus/icons-vue';
@@ -141,24 +145,25 @@ function handleEditNickname() {
     ElMessage.warning('请先登录');
     return;
   }
-  
-  newNickname.value = userStore.userInfo?.username || '';
+
+  newNickname.value = userStore.userInfo?.nickname || '';
   nicknameDialogVisible.value = true;
 }
 
 // 保存昵称
-async function saveNickname() {
-  if (!newNickname.value) {
-    ElMessage.warning('昵称不能为空');
-    return;
+async function updateNickname() {
+  const result = await ipc.invoke(ipcApiRoute.userInfo.updateNickname, {
+    userId: userStore.userInfo?.id,
+    nickname: newNickname.value,
+    token: userStore.appTokens?.access
+  });
+  if(result?.code === 200) {
+    ElMessage.success(result.message);
+    userStore.userInfo!.nickname = result.data.nickname;
+    nicknameDialogVisible.value = false;
+  } else {
+    ElMessage.error(result?.message);
   }
-  
-  // 实际应用中，这里需要调用接口保存昵称
-  // const result = await ipc.invoke(ipcApiRoute.user.updateNickname, { nickname: newNickname.value });
-  
-  // 模拟成功
-  ElMessage.success('昵称修改成功');
-  nicknameDialogVisible.value = false;
 }
 
 // 处理退出登录
@@ -197,14 +202,14 @@ function formatDate(dateStr?: string) {
     display: flex;
     align-items: center;
     border-bottom: 1px solid var(--el-border-color-lighter);
-    
+
     .user-avatar {
       margin-right: 6px;
     }
-    
+
     .user-info {
       flex: 1;
-      
+
       .user-nickname {
         display: flex;
         align-items: center;
@@ -212,13 +217,13 @@ function formatDate(dateStr?: string) {
         font-weight: 500;
         color: var(--el-text-color-primary);
         margin-bottom: 1px;
-        
+
         .edit-btn {
           margin-left: 2px;
           padding: 0;
         }
       }
-      
+
       .user-email {
         font-size: 12px;
         color: var(--el-text-color-secondary);
@@ -235,11 +240,11 @@ function formatDate(dateStr?: string) {
       }
     }
   }
-  
+
   .user-profile-body {
     padding: 6px 10px 2px 10px;
     border-bottom: 1px solid var(--el-border-color-lighter);
-    
+
     .info-item {
       display: flex;
       justify-content: space-between;
@@ -259,10 +264,10 @@ function formatDate(dateStr?: string) {
       }
     }
   }
-  
+
   .user-profile-footer {
     padding: 6px 10px 6px 10px;
-    
+
     .menu-item {
       display: flex;
       align-items: center;
@@ -270,15 +275,21 @@ function formatDate(dateStr?: string) {
       cursor: pointer;
       color: var(--el-text-color-regular);
       font-size: 13px;
-      
+
       &:hover {
         color: var(--el-color-danger);
       }
-      
+
       .el-icon {
         margin-right: 4px;
       }
     }
   }
 }
-</style> 
+
+.email-dialog :deep(.dialog-footer) {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+</style>
