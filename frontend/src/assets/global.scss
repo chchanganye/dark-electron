@@ -1,64 +1,106 @@
 /* 全局样式 */
 
+
 /* 重置样式 */
+
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-html, body {
-  height: 100%;
-  width: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: var(--app-bg-primary);
-  color: var(--app-text-primary);
-  transition: background-color var(--app-transition-time), color var(--app-transition-time);
+html,
+body {
+    height: 100%;
+    width: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: var(--app-bg-primary);
+    color: var(--app-text-primary);
+    transition: background-color var(--app-transition-time), color var(--app-transition-time);
 }
 
 #app {
-  height: 100%;
-  width: 100%;
+    height: 100%;
+    width: 100%;
 }
 
+
 /* 滚动条样式 */
+
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+    width: 6px;
+    height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+    background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: transparent;
-  border-radius: 3px;
-  transition: background-color 0.3s;
+    background: transparent;
+    border-radius: 3px;
+    transition: background-color 0.3s;
 }
 
 :hover::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.2);
 }
 
 :hover::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.3);
 }
 
+
 /* 全局过渡效果 */
+
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.3s ease;
+    transition: opacity 0.3s ease;
 }
 
 .fade-enter-from,
 .fade-leave-to {
-  opacity: 0;
+    opacity: 0;
 }
 
+
 /* 阻止文本选择 */
+
 .no-select {
-  user-select: none;
-} 
+    user-select: none;
+}
+
+
+/* 卡片全局样式：默认无阴影，悬浮时有阴影 */
+
+.el-card,
+.el-card.box-card {
+    box-shadow: none !important;
+    transition: box-shadow 0.25s;
+}
+
+.el-card:hover,
+.el-card.box-card:hover {
+    /* 兜底：如果没有 html.light 选择器时也有阴影，防止亮色主题下无阴影 */
+    box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.18) !important;
+}
+
+html.light .el-card:hover,
+html.light .el-card.box-card:hover {
+    box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.18) !important;
+}
+
+html.dark .el-card:hover,
+html.dark .el-card.box-card:hover {
+    box-shadow: 0 0 8px 0 #5f4f6b, 0 0 16px 0 #6a5081 !important;
+}
+
+html.dark .el-button:not(.is-link):not(.is-text):hover,
+html.dark .el-button:not(.is-link):not(.is-text):focus {
+    background: #786c83 !important;
+    /* 比主按钮紫色更淡 */
+    border-color: #8e7bbd !important;
+    color: #fff !important;
+}

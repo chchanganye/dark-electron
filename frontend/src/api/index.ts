@@ -85,7 +85,18 @@ const ipcApiRoute = {
     checkForUpdater: 'controller/autoUpdater/checkForUpdater',
     downloadApp: 'controller/autoUpdater/downloadApp',
     getAppVersion: 'controller/autoUpdater/getAppVersion',
+  },
+
+  // 用户数据接口
+  userdb: {
+    getUserList: 'controller/userdb/getUsers',
+    addUser: 'controller/userdb/addUser',
+    addUsers: 'controller/userdb/addUsers',
+    deleteUser: 'controller/userdb/deleteUser',
+    extractUidFromLink: 'controller/userdb/extractUidFromLink',
+    searchVideosByKeyword: 'controller/userdb/searchVideosByKeyword',
   }
+
 }
 
 /**

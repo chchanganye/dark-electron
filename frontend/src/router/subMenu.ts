@@ -171,7 +171,23 @@ export const menuConfig: MainMenu[] = [
         order: 2
       }
     ]
+  },
+  {
+    title: '用户筛选',
+    icon: 'User',
+    name: 'user',
+    order: 6,
+    visible: true,
+    children: [
+      {
+        icon: 'Flag',
+        title: '关键词筛选',
+        path: '/userfilter/keyword',
+        order: 1
+      },
+    ]
   }
+
 ];
 
 // 辅助函数：根据路由路径获取菜单项
@@ -197,6 +213,6 @@ export function getSortedMainMenus(): MainMenu[] {
 export function getSortedMenuItems(mainMenuName: string): MenuItem[] {
   const mainMenu = menuConfig.find(menu => menu.name === mainMenuName);
   if (!mainMenu || mainMenu.visible === false) return [];
-  
+
   return [...mainMenu.children].sort((a, b) => (a.order || 0) - (b.order || 0));
 }

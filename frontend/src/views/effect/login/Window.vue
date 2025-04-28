@@ -96,9 +96,9 @@ onMounted(async () => {
       loading.value = false;
       return;
     }
-    const result = await ipc.invoke(ipcApiRoute.effect.autoLogin, { 
-      userId: userStore.userInfo.id, 
-      accessToken: userStore.appTokens.access 
+    const result = await ipc.invoke(ipcApiRoute.effect.autoLogin, {
+      userId: userStore.userInfo.id,
+      accessToken: userStore.appTokens.access
     });
     if (result?.code === 200) {
       // 保存用户信息(包含权限)、token到store
@@ -107,7 +107,7 @@ onMounted(async () => {
       userStore.setLogin(result.data.user);
       setTimeout(() => {
         router.push('/framework/socket/ipc');
-        ipc.invoke(ipcApiRoute.effect.restoreWindow, { width: 980, height: 650 });
+        ipc.invoke(ipcApiRoute.effect.restoreWindow, { width: 1600, height: 1000 });
         ElMessage.success('登录成功');
       }, 1000);
     } else {
@@ -130,15 +130,15 @@ const login = async () => {
       // 权限字段会被保存在内存中，但不会被持久化到本地存储
       console.log('登录成功', result.data);
       userStore.setLogin(result.data.user, result.data.tokens);
-      
+
       if (rememberAccount.value) {
         userStore.setRememberedAccount(username.value);
       } else {
         userStore.setRememberedAccount('');
       }
-      
+
       userStore.setAutoLogin(autoLogin.value);
-      
+
       ElMessage.success(result.message);
       setTimeout(() => {
         router.push('/framework/socket/ipc');
