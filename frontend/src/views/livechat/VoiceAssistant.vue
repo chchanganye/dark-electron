@@ -32,7 +32,7 @@
               <el-switch v-model="randomBroadcastSettings.enabled" />
             </div>
           </div>
-          
+
           <div v-if="randomBroadcastSettings.enabled" class="setting-item">
             <div class="setting-label">插播间隔</div>
             <div class="time-inputs">
@@ -42,7 +42,7 @@
               <span class="unit">秒</span>
             </div>
           </div>
-          
+
           <div v-if="randomBroadcastSettings.enabled" class="setting-item">
             <div class="setting-label">插播概率</div>
             <div class="probability-slider">
@@ -135,33 +135,31 @@
           <div v-if="randomBroadcastSettings.enabled" class="broadcast-settings">
             <div class="broadcast-group-selector">
               <div class="setting-item">
-                <div class="setting-label">时间音频组:</div>
-                <div class="time-group-select">
-                  <el-select v-model="randomBroadcastSettings.timeGroupPath" placeholder="选择时间音频组" size="small" style="width: 100%">
-                    <el-option
-                      v-for="group in broadcastGroups.timeGroups"
-                      :key="group.path"
-                      :label="group.name"
-                      :value="group.path"
-                    />
+                <div class="setting-label">插播文件夹:</div>
+                <div style="display: flex; gap: 8px; width: 100%; align-items: center;">
+                  <span style="line-height: 32px; font-size: 12px;">时间组</span>
+                  <el-select v-model="selectedTimeFolder" placeholder="选择时间组文件夹" size="small" style="flex: 1">
+                    <el-option v-for="folder in broadcastFolders.filter(f => f.name === '时间组')" :key="folder.path" :label="folder.name" :value="folder.path" />
                   </el-select>
-                  <el-button size="small" @click="loadBroadcastGroups" :loading="loadingBroadcastGroups" class="refresh-btn">
+                  <el-button size="small" @click="openBroadcastFolder(selectedTimeFolder)" class="folder-btn">
+                    <el-icon><Folder /></el-icon>
+                  </el-button>
+                  <el-button size="small" @click="testPlayTime()" class="folder-btn" title="测试播报时间">
+                    <el-icon><VideoPlay /></el-icon>
+                  </el-button>
+                  <span style="line-height: 32px; font-size: 12px;">人数组</span>
+                  <el-select v-model="selectedViewerFolder" placeholder="选择人数组文件夹" size="small" style="flex: 1">
+                    <el-option v-for="folder in broadcastFolders.filter(f => f.name === '人数组')" :key="folder.path" :label="folder.name" :value="folder.path" />
+                  </el-select>
+                  <el-button size="small" @click="openBroadcastFolder(selectedViewerFolder)" class="folder-btn">
+                    <el-icon><Folder /></el-icon>
+                  </el-button>
+                  <el-button size="small" @click="testPlayViewers()" class="folder-btn" title="测试播报人数">
+                    <el-icon><VideoPlay /></el-icon>
+                  </el-button>
+                  <el-button size="small" @click="loadBroadcastFolders" :loading="loadingBroadcastGroups" class="refresh-btn">
                     <el-icon><Refresh /></el-icon>
                   </el-button>
-                </div>
-              </div>
-              
-              <div class="setting-item">
-                <div class="setting-label">人数音频组:</div>
-                <div class="time-group-select">
-                  <el-select v-model="randomBroadcastSettings.viewerGroupPath" placeholder="选择人数音频组" size="small" style="width: 100%">
-                    <el-option
-                      v-for="group in broadcastGroups.viewerGroups"
-                      :key="group.path"
-                      :label="group.name"
-                      :value="group.path"
-                    />
-                  </el-select>
                 </div>
               </div>
             </div>
@@ -207,7 +205,7 @@ import { ipcApiRoute } from '@/api';
 import { voiceAssistantApi } from '@/api';
 import { ipc } from '@/utils/ipcRenderer';
 import { ElMessage } from 'element-plus';
-import { Refresh, Folder } from '@element-plus/icons-vue';
+import { Refresh, Folder, VideoPlay } from '@element-plus/icons-vue';
 import { useLivechatStore } from '@/stores/livechatStore';
 import axios from 'axios';
 import { debounce } from 'lodash';
@@ -241,8 +239,8 @@ const loadingAudioDevices = ref(false);
 const audioSettings = ref({
   volume: 80,
   playbackRate: 1.0,
-  minInterval: 5,
-  maxInterval: 10,
+  minInterval: 0,
+  maxInterval: 0,
   playMode: 'random',
   deviceId: null // 用于存储选中的设备ID
 });
@@ -254,7 +252,7 @@ const randomBroadcastSettings = ref({
   maxInterval: 600, // 默认最大间隔10分钟
   probability: 30, // 默认30%的概率
   timeGroupPath: '',
-  viewerGroupPath: '', 
+  viewerGroupPath: '',
   lastBroadcastTime: 0, // 上次插播时间
   nextBroadcastTime: 0 // 下次插播时间
 });
@@ -271,6 +269,11 @@ const liveRoomInfo = ref({
   viewers: 0, // 当前观看人数
   lastUpdateTime: 0 // 最后更新时间
 });
+
+// 1. data部分调整
+const broadcastFolders = ref([]); // 插播文件夹列表
+const selectedTimeFolder = ref(''); // 选中的时间组上级文件夹
+const selectedViewerFolder = ref(''); // 选中的人数组上级文件夹
 
 // 加载保存的音频设置
 const loadAudioSettings = async () => {
@@ -373,7 +376,8 @@ const getAudioDevices = async () => {
 
     const response = await axios.get(`${baseUrl}/api/devices`);
 
-    if (response.data && response.data.code === 0) {
+    // 适配新格式：code=200, data为设备数组
+    if (response.data && response.data.code === 200 && Array.isArray(response.data.data)) {
       audioDevices.value = response.data.data;
       console.log('获取到音频输出设备列表:', audioDevices.value);
 
@@ -548,12 +552,12 @@ const getAudioGroups = async () => {
 
       // 加载上次保存的音频组选择
       const savedGroup = await loadSelectedAudioGroup();
-      
+
       // 如果有保存的选择并且该组仍然存在
       if (savedGroup && audioGroups.value.includes(savedGroup)) {
         selectedAudioGroup.value = savedGroup;
         console.log('已恢复保存的音频组选择:', savedGroup);
-      } 
+      }
       // 如果当前选择的组不存在于列表中，或者没有选择
       else if (!selectedAudioGroup.value || !audioGroups.value.includes(selectedAudioGroup.value)) {
         selectedAudioGroup.value = audioGroups.value.length > 0 ? audioGroups.value[0] : '';
@@ -619,7 +623,7 @@ const playAudioFile = async (file) => {
       file_path: file.path
     });
 
-    if (!durationResponse.data || durationResponse.data.code !== 0) {
+    if (!durationResponse.data || durationResponse.data.code !== 200) {
       throw new Error('获取音频时长失败');
     }
 
@@ -633,7 +637,7 @@ const playAudioFile = async (file) => {
       playback_speed: audioSettings.value.playbackRate
     });
 
-    if (response.data && response.data.code === 0) {
+    if (response.data && response.data.code === 200) {
       ElMessage.success('开始播放音频文件');
 
       // 计算实际播放时长（考虑播放速度）
@@ -691,7 +695,7 @@ const stopAudioPlayback = async () => {
     // 使用Python服务API停止播放
     const response = await axios.post(`${baseUrl}/api/stop`);
 
-    if (response.data && response.data.code === 0) {
+    if (response.data && response.data.code === 200) {
       console.log('已停止音频播放');
     } else {
       console.error('停止音频播放失败:', response.data?.message);
@@ -741,7 +745,7 @@ const enableVoiceAssistant = async () => {
         sharedState.consoleRef.addVoiceAssistantLog(`语音助手已启用，使用音频组: ${selectedAudioGroup.value}`);
       }
       ElMessage.success('已启动语音助手（子文件夹模式）');
-      
+
       // 开始播放循环
       startPlaybackLoop();
     } else {
@@ -764,54 +768,60 @@ const startPlaybackLoop = async () => {
   if (!isVoiceEnabled.value || subFolders.value.length === 0) {
     return;
   }
-  
+
   try {
     // 检查是否需要插播
     if (shouldBroadcast()) {
       console.log('触发随机插播');
       const broadcastSuccess = await playBroadcast();
-      
+
       // 无论插播是否成功，都设置一个定时器继续正常的播放循环
       playbackTimer = setTimeout(() => {
         if (isVoiceEnabled.value) {
           startPlaybackLoop();
         }
       }, 5000);
-      
+
       // 如果插播成功，则本次循环结束，不继续播放普通音频
       if (broadcastSuccess) {
         return;
       }
       // 如果插播失败，则继续正常的播放流程
     }
-    
+
     // 获取当前要播放的子文件夹
     const folder = subFolders.value[currentFolderIndex.value];
     console.log(`准备播放子文件夹: ${folder.name}`);
-    
+
     // 调用API播放该子文件夹中的随机音频
     const response = await voiceAssistantApi.playSubFolderAudio(
       `${selectedAudioGroup.value}/${folder.name}`
     );
-    
-    if (response.status === 'success' && response.data) {
-      const { file, duration, actualDuration } = response.data;
-      console.log(`播放音频: ${file.name}, 时长: ${duration}秒, 实际播放时长: ${actualDuration}秒`);
-      
-      // 在控制台显示完整的文件路径
-      if (sharedState?.consoleRef) {
-        sharedState.consoleRef.addVoiceAssistantLog(`播放音频文件: ${file.path}`);
-      }
-      
+
+    // 修改判断逻辑：只要返回了响应，就认为是成功的
+    if (response) {
+      console.log('开始播放音频');
+
       // 更新到下一个文件夹索引
       currentFolderIndex.value = (currentFolderIndex.value + 1) % subFolders.value.length;
-      
+
       // 计算随机等待时间
       const minInterval = audioSettings.value.minInterval;
       const maxInterval = audioSettings.value.maxInterval;
+
+      // 修复：当最小和最大间隔都是0时，立即播放下一个音频，无需等待
+      if (minInterval === 0 && maxInterval === 0) {
+        console.log('播放间隔设置为0-0，立即播放下一个音频');
+        // 立即开始下一轮播放
+        if (isVoiceEnabled.value) {
+          startPlaybackLoop();
+        }
+        return;
+      }
+
       const waitTime = Math.floor(minInterval + Math.random() * (maxInterval - minInterval));
-      console.log(`音频播放后等待 ${waitTime} 秒, `);
-      
+      console.log(`音频播放后等待 ${waitTime} 秒`);
+
       // 等待音频播放完成加上间隔时间后，再播放下一个
       playbackTimer = setTimeout(() => {
         if (isVoiceEnabled.value) {
@@ -819,10 +829,10 @@ const startPlaybackLoop = async () => {
         }
       }, waitTime * 1000);
     } else {
-      console.error('播放音频失败:', response.message);
+      console.error('播放音频失败: 未收到响应');
       // 出错时仍然继续尝试下一个文件夹
       currentFolderIndex.value = (currentFolderIndex.value + 1) % subFolders.value.length;
-      
+
       // 5秒后重试
       playbackTimer = setTimeout(() => {
         if (isVoiceEnabled.value) {
@@ -850,7 +860,7 @@ const disableVoiceAssistant = async () => {
       clearTimeout(playbackTimer);
       playbackTimer = null;
     }
-    
+
     // 首先停止当前音频播放
     await stopAudioPlayback();
 
@@ -1029,144 +1039,79 @@ const playTestAudio = async (folder) => {
   }
 };
 
-// 加载时间和人数音频组
-const loadBroadcastGroups = async () => {
+// 2. 加载插播文件夹列表方法
+const loadBroadcastFolders = async () => {
   loadingBroadcastGroups.value = true;
   try {
-    // 获取报时及人数录音文件夹下的音频组
-    const result = await ipc.invoke(ipcApiRoute.voiceAssistant.getBroadcastGroups);
-    if (result && result.status === 'success' && result.data) {
-      broadcastGroups.value = result.data;
-      console.log('获取到插播音频组:', broadcastGroups.value);
-      
-      // 如果有可用的时间组和人数组，且没有之前保存的选择，则默认选择第一个
-      if (broadcastGroups.value.timeGroups.length > 0 && !randomBroadcastSettings.value.timeGroupPath) {
-        randomBroadcastSettings.value.timeGroupPath = broadcastGroups.value.timeGroups[0].path;
-      }
-      
-      if (broadcastGroups.value.viewerGroups.length > 0 && !randomBroadcastSettings.value.viewerGroupPath) {
-        randomBroadcastSettings.value.viewerGroupPath = broadcastGroups.value.viewerGroups[0].path;
-      }
-      
-      // 验证保存的音频组路径是否仍然有效
-      if (randomBroadcastSettings.value.timeGroupPath) {
-        const timeGroupExists = broadcastGroups.value.timeGroups.some(
-          g => g.path === randomBroadcastSettings.value.timeGroupPath
-        );
-        if (!timeGroupExists && broadcastGroups.value.timeGroups.length > 0) {
-          randomBroadcastSettings.value.timeGroupPath = broadcastGroups.value.timeGroups[0].path;
-        }
-      }
-      
-      if (randomBroadcastSettings.value.viewerGroupPath) {
-        const viewerGroupExists = broadcastGroups.value.viewerGroups.some(
-          g => g.path === randomBroadcastSettings.value.viewerGroupPath
-        );
-        if (!viewerGroupExists && broadcastGroups.value.viewerGroups.length > 0) {
-          randomBroadcastSettings.value.viewerGroupPath = broadcastGroups.value.viewerGroups[0].path;
-        }
-      }
-      
-      // 如果已有选择，保存设置确保持久化
-      if (randomBroadcastSettings.value.timeGroupPath || randomBroadcastSettings.value.viewerGroupPath) {
-        saveRandomBroadcastSettings();
-      }
+    const result = await voiceAssistantApi.getBroadcastGroups();
+    if (result && result.status === 'success' && result.data && result.data.folders) {
+      broadcastFolders.value = result.data.folders;
+      // 默认选择第一个时间组和人数组
+      const time = broadcastFolders.value.find(f => f.name === '时间组');
+      const viewer = broadcastFolders.value.find(f => f.name === '人数组');
+      if (time) selectedTimeFolder.value = time.path;
+      if (viewer) selectedViewerFolder.value = viewer.path;
     } else {
-      console.error('获取插播音频组失败:', result?.message);
-      ElMessage.warning('获取插播音频组失败: ' + (result?.message || '未知错误'));
+      broadcastFolders.value = [];
+      ElMessage.warning('获取插播文件夹失败: ' + (result?.message || '未知错误'));
     }
   } catch (error) {
-    console.error('获取插播音频组出错:', error);
-    ElMessage.error('获取插播音频组出错: ' + (error.message || '未知错误'));
+    broadcastFolders.value = [];
+    ElMessage.error('获取插播文件夹出错: ' + (error.message || '未知错误'));
   } finally {
     loadingBroadcastGroups.value = false;
   }
 };
 
-// 监听直播间消息更新观看人数
-const setupLiveRoomListener = () => {
-  // 监听直播间消息
-  ipc.on('livechat-message', (event, message) => {
-    if (message && (message.type === 'room_stats' || message.type === 'room_user_seq')) {
-      // 解析观看人数
-      if (message.message) {
-        // 匹配类似 "【统计msg】当前观看人数: 123, 累计观看人数: 456" 的格式
-        const match = message.message.match(/当前观看人数[:：]\s*(\d+)/);
-        if (match && match[1]) {
-          liveRoomInfo.value.viewers = parseInt(match[1], 10);
-          liveRoomInfo.value.lastUpdateTime = Date.now();
-          console.log('更新直播间观看人数:', liveRoomInfo.value.viewers);
-        }
-      }
-    }
-  });
-};
-
-// 播放报时和人数插播
+// 4. playBroadcast方法调整
 const playBroadcast = async () => {
   try {
-    if (!randomBroadcastSettings.value.timeGroupPath || !randomBroadcastSettings.value.viewerGroupPath) {
-      console.error('未选择时间或人数音频组');
+    if (!selectedTimeFolder.value || !selectedViewerFolder.value) {
+      ElMessage.warning('请先选择时间组和人数组文件夹');
       return false;
     }
-    
     // 获取当前时间
     const now = new Date();
     const hour = now.getHours();
     const minute = now.getMinutes();
-    
     // 获取当前观看人数
     const viewers = liveRoomInfo.value.viewers;
     if (!viewers) {
-      console.error('暂无直播间观看人数数据');
+      ElMessage.warning('暂无直播间观看人数数据');
       return false;
     }
-    
-    console.log(`开始播报: 当前时间 ${hour}:${minute}，观看人数 ${viewers}`);
-    
     // 播放时间音频
-    const timeResult = await ipc.invoke(ipcApiRoute.voiceAssistant.playBroadcast, {
-      type: 'time',
+    const timeResult = await voiceAssistantApi.playTimeBroadcast(
       hour,
       minute,
-      timeGroupPath: randomBroadcastSettings.value.timeGroupPath,
-      deviceId: selectedAudioDevice.value,
-      playbackRate: audioSettings.value.playbackRate
-    });
-    
+      selectedTimeFolder.value,
+      selectedAudioDevice.value,
+      audioSettings.value.playbackRate
+    );
     if (!timeResult || timeResult.status !== 'success') {
-      console.error('播放报时音频失败:', timeResult?.message);
+      ElMessage.error('播放报时音频失败: ' + (timeResult?.message || ''));
       return false;
     }
-    
-    // 报时音频播放完成后，播放人数音频
-    const viewerResult = await ipc.invoke(ipcApiRoute.voiceAssistant.playBroadcast, {
-      type: 'viewers',
+    // 播放人数音频
+    const viewerResult = await voiceAssistantApi.playViewersBroadcast(
       viewers,
-      viewerGroupPath: randomBroadcastSettings.value.viewerGroupPath,
-      deviceId: selectedAudioDevice.value,
-      playbackRate: audioSettings.value.playbackRate
-    });
-    
+      selectedViewerFolder.value,
+      selectedAudioDevice.value,
+      audioSettings.value.playbackRate
+    );
     if (!viewerResult || viewerResult.status !== 'success') {
-      console.error('播放人数音频失败:', viewerResult?.message);
+      ElMessage.error('播放人数音频失败: ' + (viewerResult?.message || ''));
       return false;
     }
-    
-    // 更新上次播报时间和计算下次播报时间
+    // 更新插播时间
     randomBroadcastSettings.value.lastBroadcastTime = Date.now();
-    
-    // 生成随机间隔时间
     const minInterval = randomBroadcastSettings.value.minInterval;
     const maxInterval = randomBroadcastSettings.value.maxInterval;
     const randomInterval = Math.floor(minInterval + Math.random() * (maxInterval - minInterval));
-    
     randomBroadcastSettings.value.nextBroadcastTime = Date.now() + (randomInterval * 1000);
-    console.log(`插播完成，下次插播将在${randomInterval}秒后`);
-    
     return true;
   } catch (error) {
-    console.error('播放插播出错:', error);
+    ElMessage.error('播放插播出错: ' + (error.message || ''));
     return false;
   }
 };
@@ -1175,27 +1120,27 @@ const playBroadcast = async () => {
 const shouldBroadcast = () => {
   // 如果未启用插播，直接返回false
   if (!randomBroadcastSettings.value.enabled) return false;
-  
+
   // 如果尚未设置下次播报时间，立即设置
   if (!randomBroadcastSettings.value.nextBroadcastTime) {
     // 生成随机间隔时间
     const minInterval = randomBroadcastSettings.value.minInterval;
     const maxInterval = randomBroadcastSettings.value.maxInterval;
     const randomInterval = Math.floor(minInterval + Math.random() * (maxInterval - minInterval));
-    
+
     randomBroadcastSettings.value.nextBroadcastTime = Date.now() + (randomInterval * 1000);
     return false;
   }
-  
+
   // 如果还未到下次播报时间，返回false
   if (Date.now() < randomBroadcastSettings.value.nextBroadcastTime) {
     return false;
   }
-  
+
   // 根据概率判断是否播报
   const probability = randomBroadcastSettings.value.probability;
   const random = Math.random() * 100;
-  
+
   return random <= probability;
 };
 
@@ -1266,9 +1211,98 @@ watch([
 watch(() => randomBroadcastSettings.value.enabled, (newValue) => {
   if (newValue) {
     // 加载时间和人数音频组
-    loadBroadcastGroups();
+    loadBroadcastFolders();
   }
 });
+
+// 新增方法 openBroadcastFolder
+const openBroadcastFolder = async (folderPath) => {
+  if (!folderPath) {
+    ElMessage.warning('请选择要打开的文件夹');
+    return;
+  }
+  try {
+    const result = await ipc.invoke(ipcApiRoute.voiceAssistant.openAudioGroupFolder, {
+      groupName: folderPath
+    });
+    if (result && result.status === 'success') {
+      ElMessage.success('已打开文件夹');
+    } else {
+      ElMessage.error(result?.message || '打开文件夹失败');
+    }
+  } catch (error) {
+    console.error('打开文件夹出错:', error);
+    ElMessage.error('打开文件夹出错: ' + (error.message || '未知错误'));
+  }
+};
+
+// 测试播放时间的方法
+const testPlayTime = async () => {
+  if (!selectedTimeFolder.value) {
+    ElMessage.warning('请先选择时间组文件夹');
+    return;
+  }
+  if (!selectedAudioDevice.value) {
+    ElMessage.warning('请先选择音频输出设备');
+    return;
+  }
+  // 调试输出
+  console.log('测试时间组路径:', selectedTimeFolder.value);
+  // 获取当前时间
+  const now = new Date();
+  const hour = now.getHours();
+  const minute = now.getMinutes();
+  // 直接传完整路径
+  const timeResult = await voiceAssistantApi.playTimeBroadcast(
+    hour,
+    minute,
+    selectedTimeFolder.value,
+    selectedAudioDevice.value,
+    audioSettings.value.playbackRate
+  );
+  if (timeResult && timeResult.status === 'success') {
+    ElMessage.success(`正在播报当前时间: ${hour}:${minute}`);
+  } else {
+    ElMessage.error('播放报时音频失败: ' + (timeResult?.message || ''));
+  }
+};
+
+// 测试播放人数的方法
+const testPlayViewers = async () => {
+  if (!selectedViewerFolder.value) {
+    ElMessage.warning('请先选择人数组文件夹');
+    return;
+  }
+  if (!selectedAudioDevice.value) {
+    ElMessage.warning('请先选择音频输出设备');
+    return;
+  }
+  // 调试输出
+  console.log('测试人数组路径:', selectedViewerFolder.value);
+  // 检查是否连接直播间
+  if (!connected.value || !roomId.value) {
+    ElMessage.warning('请先连接直播间');
+    return;
+  }
+  // 获取当前观看人数
+  const viewers = liveRoomInfo.value.viewers;
+  if (!viewers) {
+    ElMessage.warning('暂无直播间观看人数数据');
+    return;
+  }
+  // 直接传完整路径
+  const viewerResult = await voiceAssistantApi.playViewersBroadcast(
+    viewers,
+    selectedViewerFolder.value,
+    selectedAudioDevice.value,
+    audioSettings.value.playbackRate
+  );
+  if (viewerResult && viewerResult.status === 'success') {
+    ElMessage.success(`正在播报当前观看人数: ${viewers}`);
+  } else {
+    ElMessage.error('播放人数音频失败: ' + (viewerResult?.message || ''));
+  }
+};
 
 // 组件挂载时
 onMounted(async () => {
@@ -1295,16 +1329,13 @@ onMounted(async () => {
   }
   await checkVoiceAssistantStatus();
 
-  // 加载随机插播设置 - 确保在loadBroadcastGroups之前加载
+  // 加载随机插播设置 - 确保在loadBroadcastFolders之前加载
   await loadRandomBroadcastSettings();
-  
-  // 如果随机插播已启用，加载时间和人数音频组
+
+  // 如果随机插播已启用，加载插播文件夹
   if (randomBroadcastSettings.value.enabled) {
-    await loadBroadcastGroups();
+    await loadBroadcastFolders();
   }
-  
-  // 设置直播间监听器
-  setupLiveRoomListener();
 });
 
 // 组件卸载前
@@ -1314,7 +1345,7 @@ onBeforeUnmount(() => {
     clearTimeout(playbackTimer);
     playbackTimer = null;
   }
-  
+
   // 如果正在播放，停止播放
   if (isVoiceEnabled.value) {
     disableVoiceAssistant();
@@ -1563,12 +1594,12 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  
+
   .setting-item {
     display: flex;
     align-items: center;
     margin-bottom: 6px;
-    
+
     .setting-label {
       width: 80px;
       color: #606266;
@@ -1577,19 +1608,23 @@ onBeforeUnmount(() => {
       margin-bottom: 0;
       white-space: nowrap;
     }
-    
+
     .time-group-select {
       flex: 1;
       display: flex;
       align-items: center;
-      
+
       .el-select {
         flex: 1;
       }
-      
+
       .refresh-btn {
         margin-left: 5px;
       }
+    }
+    // 新增：让测试播放按钮和打开文件夹按钮之间无间距
+    .folder-btn + .folder-btn {
+      margin-left: 0;
     }
   }
 }
@@ -1598,12 +1633,12 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   flex: 1;
-  
+
   .el-slider {
     flex: 1;
     margin-right: 10px;
   }
-  
+
   .slider-value {
     min-width: 40px;
     font-size: 12px;

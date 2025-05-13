@@ -15,6 +15,8 @@ const ipcApiRoute = {
         removeStream: 'controller/livesave/removeStream',
         toggleStreamMonitoring: 'controller/livesave/toggleStreamMonitoring',
         openDownloadsFolder: 'controller/livesave/openDownloadsFolder',
+        getRecordSettings: 'controller/livesave/getRecordSettings',
+        updateRecordSettings: 'controller/livesave/updateRecordSettings',
     },
     framework: {
         checkForUpdater: 'controller/framework/checkForUpdater',
@@ -172,21 +174,21 @@ export const voiceAssistantApi = {
     getBroadcastGroups: () => {
         return ipc.invoke(ipcApiRoute.voiceAssistant.getBroadcastGroups);
     },
-    playTimeBroadcast: (hour, minute, timeGroupPath, deviceId, playbackRate) => {
+    playTimeBroadcast: (hour, minute, folder, deviceId, playbackRate) => {
         return ipc.invoke(ipcApiRoute.voiceAssistant.playBroadcast, {
             type: 'time',
             hour,
             minute,
-            timeGroupPath,
+            folder,
             deviceId,
             playbackRate
         });
     },
-    playViewersBroadcast: (viewers, viewerGroupPath, deviceId, playbackRate) => {
+    playViewersBroadcast: (viewers, folder, deviceId, playbackRate) => {
         return ipc.invoke(ipcApiRoute.voiceAssistant.playBroadcast, {
             type: 'viewers',
             viewers,
-            viewerGroupPath,
+            folder,
             deviceId,
             playbackRate
         });

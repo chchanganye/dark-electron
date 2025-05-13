@@ -21,3 +21,4 @@ python/build/
 python/dist/
 *DS_Store
 .env
+build/extraResources/audio/

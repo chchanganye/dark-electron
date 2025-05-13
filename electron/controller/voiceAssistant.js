@@ -109,8 +109,8 @@ class VoiceAssistantController {
                 validSettings = {
                     volume: typeof settings.volume === 'number' ? settings.volume : 80,
                     playbackRate: typeof settings.playbackRate === 'number' ? settings.playbackRate : 1.0,
-                    minInterval: typeof settings.minInterval === 'number' ? settings.minInterval : 5,
-                    maxInterval: typeof settings.maxInterval === 'number' ? settings.maxInterval : 10,
+                    minInterval: typeof settings.minInterval === 'number' ? settings.minInterval : 0,
+                    maxInterval: typeof settings.maxInterval === 'number' ? settings.maxInterval : 0,
                     playMode: typeof settings.playMode === 'string' ? settings.playMode : 'random',
                     deviceId: settings.deviceId || '' // 添加设备ID
                 };
@@ -301,8 +301,8 @@ class VoiceAssistantController {
 
             logger.info(`尝试播放子文件夹音频: ${subFolderPath}`);
             const result = await this.voiceAssistantService.playSubFolderAudio(subFolderPath);
-            
-            if (result.code === 0) {
+
+            if (result.code === 200) {
                 return this.success('开始播放音频', result.data);
             } else {
                 return this.fail(result.message);
@@ -327,7 +327,7 @@ class VoiceAssistantController {
             }
 
             const result = await this.voiceAssistantService.getAudioDuration(filePath);
-            if (result.code === 0) {
+            if (result.code === 200) {
                 return this.success('获取音频时长成功', result.data);
             } else {
                 return this.fail(result.message);
@@ -358,29 +358,24 @@ class VoiceAssistantController {
      * @param {number} args.hour - 小时数（仅type=time时使用）
      * @param {number} args.minute - 分钟数（仅type=time时使用）
      * @param {number} args.viewers - 观看人数（仅type=viewers时使用）
-     * @param {string} args.timeGroupPath - 时间音频组路径（仅type=time时使用）
-     * @param {string} args.viewerGroupPath - 人数音频组路径（仅type=viewers时使用）
+     * @param {string} args.folder - 选定的文件夹名
      * @param {string} args.deviceId - 设备ID
      * @param {number} args.playbackRate - 播放速度
      */
     async playBroadcast(args) {
         try {
-            const { type, hour, minute, viewers, timeGroupPath, viewerGroupPath, deviceId, playbackRate } = args || {};
-            
+            const { type, hour, minute, viewers, folder, deviceId, playbackRate } = args || {};
             if (!type) {
                 return this.fail('缺少必要参数: type');
             }
-            
+            if (!folder) {
+                return this.fail('缺少必要参数: folder');
+            }
             if (type === 'time') {
                 if (hour === undefined || minute === undefined) {
                     return this.fail('播放时间插播需要提供hour和minute参数');
                 }
-                
-                if (!timeGroupPath) {
-                    return this.fail('缺少必要参数: timeGroupPath');
-                }
-                
-                const result = await this.voiceAssistantService.playTimeBroadcast(hour, minute, timeGroupPath, deviceId, playbackRate);
+                const result = await this.voiceAssistantService.playTimeBroadcast(hour, minute, folder, deviceId, playbackRate);
                 if (result) {
                     return this.success('播放时间插播成功');
                 } else {
@@ -390,12 +385,7 @@ class VoiceAssistantController {
                 if (viewers === undefined) {
                     return this.fail('播放人数插播需要提供viewers参数');
                 }
-                
-                if (!viewerGroupPath) {
-                    return this.fail('缺少必要参数: viewerGroupPath');
-                }
-                
-                const result = await this.voiceAssistantService.playViewersBroadcast(viewers, viewerGroupPath, deviceId, playbackRate);
+                const result = await this.voiceAssistantService.playViewersBroadcast(viewers, folder, deviceId, playbackRate);
                 if (result) {
                     return this.success('播放人数插播成功');
                 } else {

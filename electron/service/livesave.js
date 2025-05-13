@@ -22,6 +22,7 @@ class LiveMonitorService {
             // 使用extraResources目录下的py/config作为配置文件目录
             const configDir = path.join(getExtraResourcesDir(), 'py', 'config');
             this.configFilePath = path.join(configDir, 'URL_config.ini');
+            this.generalConfigPath = path.join(configDir, 'config.ini'); // 添加通用配置文件路径
 
             // 初始化文件编码和其他设置
             this.fileEncoding = 'utf-8';
@@ -35,6 +36,7 @@ class LiveMonitorService {
             this.retryInterval = 100; // 重试间隔(毫秒)
 
             logger.info(`使用配置文件路径: ${this.configFilePath}`);
+            logger.info(`使用通用配置文件路径: ${this.generalConfigPath}`);
 
             // 尝试创建配置文件所在的目录
             try {
@@ -55,6 +57,7 @@ class LiveMonitorService {
             logger.error(`初始化LiveMonitorService失败: ${error.message}`);
             // 设置一个默认路径
             this.configFilePath = path.join(getExtraResourcesDir(), 'py', 'config', 'URL_config.ini');
+            this.generalConfigPath = path.join(getExtraResourcesDir(), 'py', 'config', 'config.ini');
             this.fileEncoding = 'utf-8';
         }
     }
@@ -826,6 +829,193 @@ class LiveMonitorService {
         } catch (error) {
             logger.error(`API请求错误: ${error.message}`, error);
             throw error;
+        }
+    }
+
+    /**
+     * 读取通用配置文件
+     * @returns {Object} 解析后的配置对象
+     */
+    async readGeneralConfig() {
+        try {
+            if (!fs.existsSync(this.generalConfigPath)) {
+                logger.error(`通用配置文件不存在: ${this.generalConfigPath}`);
+                return { status: 'error', message: `通用配置文件不存在: ${this.generalConfigPath}` };
+            }
+
+            const content = await this.safeReadFile(this.generalConfigPath, this.fileEncoding);
+            const config = this.parseGeneralConfig(content);
+
+            return {
+                status: 'success',
+                message: '成功读取通用配置',
+                data: config
+            };
+        } catch (error) {
+            logger.error(`读取通用配置失败: ${error.message}`);
+            return {
+                status: 'error',
+                message: `读取通用配置失败: ${error.message}`
+            };
+        }
+    }
+
+    /**
+     * 解析通用配置文件内容
+     * @param {String} content - 文件内容
+     * @returns {Object} 解析后的配置对象
+     */
+    parseGeneralConfig(content) {
+        try {
+            const lines = content.split('\n');
+            const config = {
+                sections: {}
+            };
+
+            let currentSection = '';
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line || line.startsWith('#')) continue;
+
+                // 检查是否是节名称 [Section]
+                const sectionMatch = line.match(/^\[(.*?)\]$/);
+                if (sectionMatch) {
+                    currentSection = sectionMatch[1];
+                    config.sections[currentSection] = {};
+                    continue;
+                }
+
+                // 解析配置项 key = value
+                const configMatch = line.match(/^(.*?)\s*=\s*(.*)$/);
+                if (configMatch && currentSection) {
+                    const key = configMatch[1].trim();
+                    const value = configMatch[2].trim();
+                    config.sections[currentSection][key] = value;
+                }
+            }
+
+            // 提取需要展示在UI上的特定配置项
+            const recordSettings = {
+                videoFormat: config.sections['录制设置'] ? config.sections['录制设置']['视频保存格式ts|mkv|flv|mp4|mp3音频|m4a音频'] || 'flv' : 'flv',
+                segmentEnabled: config.sections['录制设置'] ? config.sections['录制设置']['分段录制是否开启'] === '是' : false,
+                segmentTime: config.sections['录制设置'] ? parseInt(config.sections['录制设置']['视频分段时间(秒)'] || '1800') : 1800,
+                convertToMp4: config.sections['录制设置'] ? config.sections['录制设置']['录制完成后自动转为mp4格式'] === '是' : false
+            };
+
+            return {
+                rawConfig: config,
+                recordSettings: recordSettings
+            };
+        } catch (error) {
+            logger.error(`解析通用配置文件失败: ${error.message}`);
+            return {
+                recordSettings: {
+                    videoFormat: 'flv',
+                    segmentEnabled: false,
+                    segmentTime: 1800,
+                    convertToMp4: false
+                }
+            };
+        }
+    }
+
+    /**
+     * 更新通用配置文件中指定的设置
+     * @param {Object} settings - 要更新的设置
+     * @returns {Object} 更新结果
+     */
+    async updateGeneralConfig(settings) {
+        try {
+            if (!fs.existsSync(this.generalConfigPath)) {
+                logger.error(`通用配置文件不存在: ${this.generalConfigPath}`);
+                return { status: 'error', message: `通用配置文件不存在: ${this.generalConfigPath}` };
+            }
+
+            // 验证输入参数
+            if (!settings) {
+                logger.error('未提供设置参数');
+                return { status: 'error', message: '未提供设置参数' };
+            }
+
+            logger.info(`准备更新配置: ${JSON.stringify(settings)}`);
+
+            // 读取现有配置
+            const content = await this.safeReadFile(this.generalConfigPath, this.fileEncoding);
+            const lines = content.split('\n');
+            let inRecordSection = false;
+            let modified = false;
+
+            // 需要更新的配置映射
+            const configMappings = {
+                videoFormat: '视频保存格式ts|mkv|flv|mp4|mp3音频|m4a音频',
+                segmentEnabled: '分段录制是否开启',
+                segmentTime: '视频分段时间(秒)',
+                convertToMp4: '录制完成后自动转为mp4格式'
+            };
+
+            // 将布尔值转换为'是'/'否'
+            const boolToString = (value) => value ? '是' : '否';
+
+            // 处理每一行
+            for (let i = 0; i < lines.length; i++) {
+                let line = lines[i].trim();
+
+                // 检查节名称
+                if (line.match(/^\[录制设置\]$/)) {
+                    inRecordSection = true;
+                    continue;
+                } else if (line.match(/^\[.*\]$/) && inRecordSection) {
+                    inRecordSection = false;
+                    continue;
+                }
+
+                // 处理在录制设置节中的配置项
+                if (inRecordSection) {
+                    for (const [settingKey, configKey] of Object.entries(configMappings)) {
+                        if (settings[settingKey] !== undefined && line.startsWith(configKey)) {
+                            let newValue;
+
+                            // 根据设置类型处理值
+                            if (typeof settings[settingKey] === 'boolean') {
+                                newValue = boolToString(settings[settingKey]);
+                            } else {
+                                newValue = String(settings[settingKey]);
+                            }
+
+                            const oldLine = lines[i];
+                            lines[i] = `${configKey} = ${newValue}`;
+                            modified = true;
+                            logger.info(`更新配置项: "${oldLine}" -> "${lines[i]}"`);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (modified) {
+                // 写回文件
+                const newContent = lines.join('\n');
+                await this.writeFileAtomically(this.generalConfigPath, newContent, this.fileEncoding);
+                logger.info('已更新通用配置文件');
+
+                return {
+                    status: 'success',
+                    message: '已更新录制设置'
+                };
+            } else {
+                logger.warn('未修改任何配置项，可能未找到对应的节或配置项');
+                return {
+                    status: 'warning',
+                    message: '未找到可更新的配置项'
+                };
+            }
+        } catch (error) {
+            logger.error(`更新通用配置失败: ${error.message}`);
+            return {
+                status: 'error',
+                message: `更新通用配置失败: ${error.message}`
+            };
         }
     }
 }
