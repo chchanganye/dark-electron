@@ -47,42 +47,6 @@
         </el-tag>
       </span>
     </div>
-
-    <div class="one-block-1">
-      <span>录制设置</span>
-    </div>
-    <div class="one-block-2">
-      <el-form class="record-setting-form" label-position="left">
-        <el-row :gutter="10" align="middle">
-          <el-col :span="5">
-            <el-form-item label="视频保存格式" label-width="90px">
-              <el-select v-model="recordSettings.videoFormat" placeholder="选择保存格式" style="width: 100%">
-                <el-option v-for="item in videoFormatOptions" :key="item.value" :label="item.label" :value="item.value" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="4">
-            <el-form-item label="分段录制" label-width="70px">
-              <el-switch v-model="recordSettings.segmentEnabled" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="6">
-            <el-form-item label="分段时间(秒)" label-width="100px">
-              <el-input-number v-model="recordSettings.segmentTime" :min="300" :max="7200" :step="300" :disabled="!recordSettings.segmentEnabled" style="width: 120px;" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="4">
-            <el-form-item label="转为MP4格式" label-width="90px">
-              <el-switch v-model="recordSettings.convertToMp4" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="5" style="text-align: right;">
-            <el-button type="primary" @click="saveRecordSettings" :loading="isSaving">保存录制设置</el-button>
-          </el-col>
-        </el-row>
-      </el-form>
-    </div>
-
     <div class="one-block-1">
       <span>直播监控列表</span>
     </div>
@@ -180,27 +144,6 @@ const qualityOptions = [
   { value: '流畅', label: '流畅' }
 ];
 const selectedQuality = ref('原画'); // 默认选择原画
-
-// 视频格式选项
-const videoFormatOptions = [
-  { value: 'ts', label: 'TS' },
-  { value: 'mkv', label: 'MKV' },
-  { value: 'flv', label: 'FLV' },
-  { value: 'mp4', label: 'MP4' },
-  { value: 'mp3音频', label: 'MP3音频' },
-  { value: 'm4a音频', label: 'M4A音频' }
-];
-
-// 录制设置
-const recordSettings = ref({
-  videoFormat: 'flv',
-  segmentEnabled: false,
-  segmentTime: 1800,
-  convertToMp4: false
-});
-
-// 保存状态
-const isSaving = ref(false);
 
 // 状态数据
 const statusData = ref({});
@@ -480,45 +423,6 @@ function getRecordStatusText(row) {
   return (recorderRunning.value && !row.isDisabled) ? '录制中' : '未录制';
 }
 
-// 获取录制设置
-function getRecordSettings() {
-  ipc.invoke(ipcApiRoute.livesave.getRecordSettings, {}).then(res => {
-    if (res.success && res.data) {
-      recordSettings.value = res.data;
-    } else {
-      showMessage(res.message || '获取录制设置失败', 'error');
-    }
-  }).catch(err => {
-    showMessage(`获取录制设置失败: ${err}`, 'error');
-  });
-}
-
-// 保存录制设置
-function saveRecordSettings() {
-  // 创建一个纯数据对象，不包含复杂的引用
-  const settings = {
-    videoFormat: recordSettings.value.videoFormat,
-    segmentEnabled: recordSettings.value.segmentEnabled,
-    segmentTime: recordSettings.value.segmentTime,
-    convertToMp4: recordSettings.value.convertToMp4
-  };
-
-  // 设置保存状态
-  isSaving.value = true;
-
-  ipc.invoke(ipcApiRoute.livesave.updateRecordSettings, settings).then(res => {
-    if (res.success) {
-      showMessage('录制设置已保存', 'success');
-    } else {
-      showMessage(res.message || '保存录制设置失败', 'error');
-    }
-  }).catch(err => {
-    showMessage(`保存录制设置失败: ${err}`, 'error');
-  }).finally(() => {
-    isSaving.value = false;
-  });
-}
-
 // 组件挂载时
 onMounted(() => {
   console.log('Live_save页面已加载');
@@ -527,9 +431,6 @@ onMounted(() => {
 
   // 主动获取一次最新配置
   getLatestConfig();
-
-  // 获取录制设置
-  getRecordSettings();
 });
 
 // 初始化所有事件监听器
@@ -609,15 +510,5 @@ onUnmounted(() => {
   transition: all 0.3s;
   min-width: 64px;
   text-align: center;
-}
-
-.record-setting-form {
-  .el-form-item {
-    margin-bottom: 0;
-    white-space: nowrap;
-    .el-form-item__label {
-      white-space: nowrap;
-    }
-  }
 }
 </style>

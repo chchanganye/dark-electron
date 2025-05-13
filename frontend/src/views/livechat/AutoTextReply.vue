@@ -23,22 +23,6 @@
             </div>
           </div>
 
-          <div class="setting-item">
-            <div class="setting-label">过滤用户名</div>
-            <el-input
-              v-model="filterUsername"
-              placeholder="请输入您的抖音用户名（用于过滤自身发言）"
-              clearable
-              class="username-input"
-            >
-              <template #append>
-                <el-tooltip content="输入您的抖音用户名，系统将不会回复您自己的发言">
-                  <el-icon><QuestionFilled /></el-icon>
-                </el-tooltip>
-              </template>
-            </el-input>
-          </div>
-
           <div class="checkbox-wrapper">
             <el-checkbox v-model="replyMode.randomSpace" class="custom-checkbox">随机空格</el-checkbox>
             <div class="emoji-checkbox-container">
@@ -223,7 +207,7 @@ import { ref, onMounted, inject, nextTick, watch, onActivated } from 'vue';
 import { ipcApiRoute } from '@/api';
 import { ipc } from '@/utils/ipcRenderer';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { Edit, Delete, Check, Close, QuestionFilled } from '@element-plus/icons-vue';
+import { Edit, Delete, Check, Close } from '@element-plus/icons-vue';
 import { useLivechatStore } from '@/stores/livechatStore';
 import EmojiManager from '@/components/EmojiManager.vue';
 
@@ -240,7 +224,6 @@ const isAutoReplyEnabled = ref(livechatStore.isAutoReplyEnabled || false);
 const loading = ref(false);
 const consoleRef = ref(sharedState?.consoleRef || null);
 const tableLoading = ref(false);
-const filterUsername = ref(livechatStore.filterUsername || '');
 
 // 关键词和关键词组
 const replyTables = ref([]);
@@ -977,8 +960,7 @@ const enableAutoReply = async () => {
       maxReplyInterval: replyDelay.value.enabled ? Number(replyDelay.value.max) * 1000 : 0, // 转换为毫秒
       randomSpace: Boolean(replyMode.value.randomSpace),
       randomEmoji: Boolean(replyMode.value.randomEmoji),
-      delayEnabled: Boolean(replyDelay.value.enabled),
-      filterUsername: filterUsername.value // 添加过滤用户名设置
+      delayEnabled: Boolean(replyDelay.value.enabled)
     };
 
     // 构建请求参数
@@ -1141,24 +1123,6 @@ watch([() => livechatStore.connected, () => livechatStore.roomId], ([newConnecte
     sharedState.roomId = roomId.value;
   }
 }, { immediate: true });
-
-// 监听过滤用户名的变化
-watch(filterUsername, async (newValue) => {
-  // 更新 store
-  livechatStore.filterUsername = newValue;
-
-  // 如果自动回复已启用，更新配置
-  if (isAutoReplyEnabled.value) {
-    try {
-      await ipc.invoke(ipcApiRoute.livechatAutoControl.updateFilterUsername, {
-        username: newValue
-      });
-      ElMessage.success('过滤用户名已更新');
-    } catch (error) {
-      ElMessage.error(`更新过滤用户名失败: ${error.message}`);
-    }
-  }
-});
 
 // 如果有共享状态，也监听它的变化
 if (sharedState) {

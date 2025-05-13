@@ -19,8 +19,7 @@ class DouyinLivechatHandler {
             maxReplyInterval: 0, // 最大回复间隔
             randomSpace: false, // 是否添加随机空格
             randomEmoji: false, // 是否添加随机表情
-            delayEnabled: false, // 是否启用发言频率延迟
-            filterUsername: null // 过滤自身发言的用户名
+            delayEnabled: false // 是否启用发言频率延迟
         };
     }
 
@@ -64,76 +63,54 @@ class DouyinLivechatHandler {
             // 调用发送消息脚本
             const result = await douyinWindow.webContents.executeJavaScript(`
                 (function() {
-                    return new Promise((resolve) => {
-                        if (window.douyinMessageHandler && typeof window.douyinMessageHandler.sendReply === 'function') {
-                            window.douyinMessageHandler.sendReply(${JSON.stringify(message)}).then(resolve);
-                        } else {
-                            // 如果消息处理器不存在，使用默认实现
-                            try {
-                                // 查找输入框 (contenteditable div)
-                                const inputBox = document.querySelector('.ace-line[data-node="true"]');
-                                if (!inputBox) {
-                                    console.error('未找到输入框');
-                                    resolve(false);
-                                    return;
-                                }
-
-                                // 输入消息内容
-                                if (inputBox) {
-                                    // 1. 清空所有现有内容
-                                    inputBox.innerHTML = '';
-
-                                    // 2. 创建符合编辑器结构的DOM节点
-                                    const activeSpan = document.createElement('span');
-                                    activeSpan.setAttribute('data-string', 'true');
-                                    activeSpan.setAttribute('data-leaf', 'true');
-                                    activeSpan.textContent = message; // 输入内容
-
-                                    const placeholderSpan = document.createElement('span');
-                                    placeholderSpan.setAttribute('data-string', 'true');
-                                    placeholderSpan.setAttribute('data-leaf', 'true');
-                                    placeholderSpan.innerHTML = '&#8203;'; // 零宽空格符
-
-                                    // 3. 插入新节点
-                                    inputBox.appendChild(activeSpan);
-                                    inputBox.appendChild(placeholderSpan);
-
-                                    // 4. 触发输入更新
-                                    const inputEvent = new Event('input', { bubbles: true });
-                                    inputBox.dispatchEvent(inputEvent);
-
-                                    // 等待输入完成后再查找按钮
-                                    setTimeout(() => {
-                                        // 查找按钮元素
-                                        const btn = document.querySelector('svg.webcast-chatroom___send-btn');
-                                        if (btn) {
-                                            // 确保按钮未被禁用
-                                            btn.classList.remove('disable');
-                                            btn.removeAttribute('disabled');
-                                            
-                                            // 创建并触发更真实的点击事件
-                                            const clickEvent = new MouseEvent('click', {
-                                                bubbles: true,    // 允许事件冒泡
-                                                cancelable: true, // 允许取消默认行为
-                                                view: window,
-                                                composed: true    // 允许跨越 shadow DOM 边界
-                                            });
-                                            
-                                            // 触发点击事件
-                                            btn.dispatchEvent(clickEvent);
-                                            resolve(true);
-                                        } else {
-                                            console.error('未找到发送按钮');
-                                            resolve(false);
-                                        }
-                                    }, 100); // 使用较短的延迟确保输入完成
-                                }
-                            } catch (e) {
-                                console.error('发送消息失败:', e);
-                                resolve(false);
+                    if (window.douyinMessageHandler && typeof window.douyinMessageHandler.sendReply === 'function') {
+                        return window.douyinMessageHandler.sendReply(${JSON.stringify(message)});
+                    } else {
+                        // 如果消息处理器不存在，使用默认实现
+                        try {
+                            // 查找输入框 (contenteditable div)
+                            const inputBox = document.querySelector('.zone-container.editor-kit-container');
+                            if (!inputBox) {
+                                console.error('未找到输入框');
+                                return false;
                             }
+                            
+                            // 聚焦输入框
+                            inputBox.focus();
+                            
+                            // 清空输入框内容
+                            inputBox.innerHTML = '';
+                            
+                            // 输入消息内容
+                            document.execCommand('insertText', false, ${JSON.stringify(message)});
+                            
+                            // 保持聚焦状态，确保回车键能够被处理
+                            inputBox.focus();
+                            
+                            // 直接模拟回车键发送消息
+                            setTimeout(() => {
+                                const enterEvent = new KeyboardEvent('keydown', {
+                                    key: 'Enter',
+                                    code: 'Enter',
+                                    keyCode: 13,
+                                    which: 13,
+                                    bubbles: true,
+                                    cancelable: true
+                                });
+                                
+                                // 确保输入框仍然处于聚焦状态
+                                inputBox.focus();
+                                
+                                // 触发回车键事件
+                                inputBox.dispatchEvent(enterEvent);
+                            }, 300);
+                            
+                            return true;
+                        } catch (e) {
+                            console.error('发送消息失败:', e);
+                            return false;
                         }
-                    });
+                    }
                 })();
             `);
 
@@ -243,37 +220,10 @@ class DouyinLivechatHandler {
                         return message.trim(); // 如果没有冒号，返回整个消息
                     },
                     
-                    // 提取发送者信息
-                    extractSenderInfo: function(data) {
-                        try {
-                            // 抖音消息格式：【聊天msg】[用户ID]用户名: 消息内容
-                            const match = data.message.match(/【聊天msg】\[(\d+)\]([^:]+):/);
-                            if (match) {
-                                const username = match[2].trim();
-                                console.log('提取到的用户名:', username);
-                                return username;
-                            }
-                            console.log('未匹配到用户名，原始消息:', data.message);
-                            return '';
-                        } catch (error) {
-                            console.error('提取发送者信息失败:', error);
-                            return '';
-                        }
-                    },
-                    
                     // 处理收到的消息
                     processMessage: function(data) {
                         // 只处理chat类型的消息
                         if (!data || data.type !== 'chat' || !this.isAutoReplyEnabled) {
-                            return;
-                        }
-                        
-                        // 提取发送者信息并过滤自身发言
-                        const sender = this.extractSenderInfo(data);
-                        console.log('当前消息发送者:', sender, '过滤用户名:', this.settings.filterUsername);
-                        
-                        if (sender && this.settings.filterUsername && sender === this.settings.filterUsername) {
-                            console.log('过滤自身发言:', data.message);
                             return;
                         }
                         
@@ -446,72 +396,56 @@ class DouyinLivechatHandler {
                     
                     // 发送回复消息
                     sendReply: function(message) {
-                        return new Promise((resolve) => {
-                            try {
-                                // 查找输入框
-                                const inputBox = document.querySelector('.ace-line[data-node="true"]');
-                                if (!inputBox) {
-                                    console.error('未找到输入框');
-                                    resolve(false);
-                                    return;
-                                }
-
-                                // 输入消息内容
-                                if (inputBox) {
-                                    // 1. 清空所有现有内容
-                                    inputBox.innerHTML = '';
-
-                                    // 2. 创建符合编辑器结构的DOM节点
-                                    const activeSpan = document.createElement('span');
-                                    activeSpan.setAttribute('data-string', 'true');
-                                    activeSpan.setAttribute('data-leaf', 'true');
-                                    activeSpan.textContent = message; // 输入内容
-
-                                    const placeholderSpan = document.createElement('span');
-                                    placeholderSpan.setAttribute('data-string', 'true');
-                                    placeholderSpan.setAttribute('data-leaf', 'true');
-                                    placeholderSpan.innerHTML = '&#8203;'; // 零宽空格符
-
-                                    // 3. 插入新节点
-                                    inputBox.appendChild(activeSpan);
-                                    inputBox.appendChild(placeholderSpan);
-
-                                    // 4. 触发输入更新
-                                    const inputEvent = new Event('input', { bubbles: true });
-                                    inputBox.dispatchEvent(inputEvent);
-
-                                    // 等待输入完成后再查找按钮
-                                    setTimeout(() => {
-                                        // 查找按钮元素
-                                        const btn = document.querySelector('svg.webcast-chatroom___send-btn');
-
-                                        if (btn) {
-                                            // 确保按钮未被禁用
-                                            btn.classList.remove('disable');
-                                            btn.removeAttribute('disabled');
-                                            
-                                            // 创建并触发更真实的点击事件
-                                            const clickEvent = new MouseEvent('click', {
-                                                bubbles: true,    // 允许事件冒泡
-                                                cancelable: true, // 允许取消默认行为
-                                                view: window,
-                                                composed: true    // 允许跨越 shadow DOM 边界
-                                            });
-
-                                            // 触发点击事件
-                                            btn.dispatchEvent(clickEvent);
-                                            resolve(true);
-                                        } else {
-                                            console.error('未找到发送按钮');
-                                            resolve(false);
-                                        }
-                                    }, 100); // 使用较短的延迟确保输入完成
-                                }
-                            } catch (error) {
-                                console.error('发送回复消息失败:', error);
-                                resolve(false);
+                        try {
+                            // 查找输入框
+                            const inputBox = document.querySelector('.zone-container.editor-kit-container');
+                            if (!inputBox) {
+                                console.error('未找到输入框');
+                                return false;
                             }
-                        });
+                            
+                            // 先清空输入框内容
+                            inputBox.innerHTML = '';
+                            
+                            // 聚焦输入框
+                            inputBox.focus();
+                            
+                            // 输入消息内容
+                            document.execCommand('insertText', false, message);
+                            
+                            // 查找按钮元素
+                            const btn = document.querySelector('svg.webcast-chatroom___send-btn');
+
+                            if (btn) {
+                              // 确保按钮未被禁用
+                              btn.classList.remove('disable');
+                              btn.removeAttribute('disabled');
+                              
+                              // 创建并触发更真实的点击事件
+                              const clickEvent = new MouseEvent('click', {
+                                bubbles: true,    // 允许事件冒泡
+                                cancelable: true, // 允许取消默认行为
+                                view: window,
+                                composed: true    // 允许跨越 shadow DOM 边界
+                              });
+
+                              // 最终触发点击事件
+                              btn.dispatchEvent(clickEvent);
+                              
+                              // 发送后再次清空输入框，确保不会残留文字
+                              setTimeout(() => {
+                                inputBox.innerHTML = '';
+                              }, 100);
+                              
+                              return true;
+                            } else {
+                              console.error('未找到发送按钮');
+                              return false;
+                            }
+                        } catch (error) {
+                            console.error('发送回复消息失败:', error);
+                            return false;
+                        }
                     }
                 };
                 
@@ -539,36 +473,34 @@ class DouyinLivechatHandler {
 
     /**
      * 更新抖音窗口的自动回复配置
-     * @param {BrowserWindow} window - 抖音窗口实例
+     * @param {BrowserWindow} douyinWindow - 抖音窗口实例
      * @param {Array} replyItems - 关键词和回复配置项
-     * @param {boolean} isAutoReplyEnabled - 是否启用自动回复
+     * @param {boolean} enabled - 是否启用自动回复
      * @param {Object} settings - 回复设置
+     * @param {Array} emojis - 表情列表
      * @returns {Promise<boolean>} - 更新结果
      */
-    async updateConfig(window, replyItems, isAutoReplyEnabled, settings = {}) {
+    async updateConfig(douyinWindow, replyItems, enabled = true, settings = null, emojis = null) {
+        if (!douyinWindow || douyinWindow.isDestroyed()) {
+            logger.error('抖音窗口不存在或已销毁，无法更新配置');
+            return false;
+        }
+
+        // 更新本地配置
+        this.setAutoReplyConfig(replyItems, enabled, settings);
+
         try {
-            // 确保所有必要的设置都被传递
-            const updatedSettings = {
-                ...this.replySettings,
-                ...settings,
-                filterUsername: settings.filterUsername // 直接使用传入的 filterUsername，不再使用默认值
-            };
-
-            logger.info(`更新配置: 自动回复=${isAutoReplyEnabled}, 过滤用户名=${updatedSettings.filterUsername || '未设置'}`);
-
-            // 更新设置
-            this.replySettings = updatedSettings;
-            this.replyItems = replyItems;
-            this.isAutoReplyEnabled = isAutoReplyEnabled;
-
-            // 如果自动回复已启用，更新消息处理器
-            if (isAutoReplyEnabled && window) {
-                await this.updateMessageHandler(window, replyItems, updatedSettings);
-            }
-
+            // 向抖音窗口发送配置更新消息
+            douyinWindow.webContents.send('douyin-config-update', {
+                replyItems: this.replyItems,
+                enabled: this.isAutoReplyEnabled,
+                settings: this.replySettings,
+                emojis: emojis
+            });
+            logger.info('已向抖音窗口发送配置更新');
             return true;
         } catch (error) {
-            logger.error(`更新配置失败: ${error.message}`);
+            logger.error(`更新抖音窗口配置失败: ${error.message}`);
             return false;
         }
     }

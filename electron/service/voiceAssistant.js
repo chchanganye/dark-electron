@@ -12,10 +12,9 @@ const { getMainWindow } = require('ee-core/electron');
 const { getDataDir, getExtraResourcesDir } = require('ee-core/ps');
 const { spawn, exec, execSync } = require('child_process');
 // 改为动态导入方式
-const getMusicMetadata = async() => {
+const getMusicMetadata = async () => {
     try {
-        return await
-        import ('music-metadata');
+        return await import('music-metadata');
     } catch (error) {
         logger.error(`导入 music-metadata 失败: ${error.message}`);
         throw error;
@@ -42,8 +41,8 @@ class VoiceAssistantService {
         this.settings = {
             volume: 80,
             playbackRate: 1.0,
-            minInterval: 0,
-            maxInterval: 0,
+            minInterval: 5,
+            maxInterval: 10,
             playMode: 'random',
             deviceId: '' // 存储选中的设备ID
         };
@@ -237,19 +236,19 @@ class VoiceAssistantService {
         try {
             // 停止当前可能在播放的音频
             this.isEnabled = false;
-
+            
             // 尝试停止任何正在播放的音频
             await this.playSingleAudio('stop');
-
+            
             // 保存当前状态
             this.isEnabled = true;
             this.currentAudioGroup = groupName;
-            this.settings = {...this.settings, ...settings };
-
+            this.settings = { ...this.settings, ...settings };
+            
             // 发送日志
             logger.info(`启动语音助手，使用音频组: ${groupName}`);
             this.sendVoiceAssistantLog(`语音助手已启动，使用音频组: ${groupName}`);
-
+            
             return true;
         } catch (error) {
             logger.error(`启动语音助手失败: ${error.message}`);
@@ -285,40 +284,40 @@ class VoiceAssistantService {
         try {
             // 构建完整的文件夹路径
             const fullPath = path.join(this.audioFolder, subFolderPath);
-
+            
             // 检查路径是否存在
             if (!fs.existsSync(fullPath)) {
                 return { code: 1, message: `子文件夹不存在: ${subFolderPath}` };
             }
-
+            
             // 获取该文件夹中的所有音频文件
             const files = await this.getAudioFilesInFolder(fullPath);
             if (!files || files.length === 0) {
                 return { code: 1, message: `子文件夹中没有音频文件: ${subFolderPath}` };
             }
-
+            
             // 随机选择一个音频文件
             const randomIndex = Math.floor(Math.random() * files.length);
             const selectedFile = files[randomIndex];
-
+            
             // 播放选中的文件
             const result = await this.playSingleAudio(selectedFile.path, {
                 volume: (this.settings.volume || 80) / 100,
                 playbackRate: this.settings.playbackRate || 1.0,
                 deviceId: this.settings.deviceId || ''
             });
-
+            
             if (result) {
                 // 获取音频时长
                 const durationResult = await this.getAudioDuration(selectedFile.path);
                 const duration = durationResult.code === 0 ? durationResult.data.duration : 0;
-
+                
                 // 记录并发送日志
                 logger.info(`正在播放: ${selectedFile.path}`);
                 this.sendVoiceAssistantLog(`正在播放音频文件: ${selectedFile.path}`);
-
-                return {
-                    code: 0,
+                
+                return { 
+                    code: 0, 
                     message: '开始播放音频',
                     data: {
                         file: selectedFile,
@@ -440,7 +439,7 @@ class VoiceAssistantService {
                 volume: volume
             });
 
-            if (response.data && response.data.code === 200) {
+            if (response.data && response.data.code === 0) {
                 logger.info(`通过Python API播放音频成功: ${filePath}`);
                 return true;
             } else {
@@ -525,35 +524,58 @@ class VoiceAssistantService {
     }
 
     /**
-     * 获取报时和人数音频组（返回完整相对路径，自动递归查找"人数组"和"时间组"）
-     * @returns {Object} folders: [{name, path}]
+     * 获取报时和人数音频组
+     * @returns {Object} 报时和人数音频组
      */
     async getBroadcastGroups() {
         try {
             const broadcastDir = path.join(this.audioFolder, '报时及人数录音');
-            const folders = [];
+            const result = {
+                timeGroups: [],
+                viewerGroups: []
+            };
+
+            // 检查目录是否存在
             if (!fs.existsSync(broadcastDir)) {
-                return { folders: [] };
+                return result;
             }
-            // 递归查找所有"人数组"和"时间组"
-            const walk = (dir, relPath = '') => {
-                const entries = fs.readdirSync(dir, { withFileTypes: true });
-                for (const entry of entries) {
-                    if (entry.isDirectory()) {
-                        const subPath = relPath ? path.join(relPath, entry.name) : entry.name;
-                        if (entry.name === '人数组' || entry.name === '时间组') {
-                            folders.push({ name: entry.name, path: path.join('报时及人数录音', subPath) });
-                        } else {
-                            walk(path.join(dir, entry.name), subPath);
-                        }
+
+            // 获取时间组
+            const timeDir = path.join(broadcastDir, '时间组');
+            if (fs.existsSync(timeDir)) {
+                const timeDirs = await readdir(timeDir);
+                for (const dir of timeDirs) {
+                    const dirPath = path.join(timeDir, dir);
+                    const stats = await stat(dirPath);
+                    if (stats.isDirectory()) {
+                        result.timeGroups.push({
+                            name: dir,
+                            path: path.join('报时及人数录音', '时间组', dir)
+                        });
                     }
                 }
-            };
-            walk(broadcastDir);
-            return { folders };
+            }
+
+            // 获取人数组
+            const viewerDir = path.join(broadcastDir, '人数组');
+            if (fs.existsSync(viewerDir)) {
+                const viewerDirs = await readdir(viewerDir);
+                for (const dir of viewerDirs) {
+                    const dirPath = path.join(viewerDir, dir);
+                    const stats = await stat(dirPath);
+                    if (stats.isDirectory()) {
+                        result.viewerGroups.push({
+                            name: dir,
+                            path: path.join('报时及人数录音', '人数组', dir)
+                        });
+                    }
+                }
+            }
+
+            return result;
         } catch (error) {
             logger.error(`获取报时和人数音频组失败: ${error.message}`);
-            return { folders: [] };
+            throw error;
         }
     }
 
@@ -561,129 +583,162 @@ class VoiceAssistantService {
      * 播放时间插播
      * @param {number} hour - 小时数
      * @param {number} minute - 分钟数
-     * @param {string} folderPath - 选定的文件夹路径
+     * @param {string} timeGroupPath - 时间音频组路径
      * @param {string} deviceId - 设备ID
      * @param {number} playbackRate - 播放速度
      * @returns {boolean} 是否成功
      */
-    async playTimeBroadcast(hour, minute, folderPath, deviceId, playbackRate) {
+    async playTimeBroadcast(hour, minute, timeGroupPath, deviceId, playbackRate) {
         try {
-            // folderPath已为完整相对路径，直接拼接到audioFolder
-            const fullPath = path.join(this.audioFolder, folderPath);
-
+            const fullPath = path.join(this.audioFolder, timeGroupPath);
+            
             // 检查目录是否存在
             if (!fs.existsSync(fullPath)) {
-                logger.error(`时间组路径不存在: ${fullPath}`);
+                logger.error(`时间音频组路径不存在: ${fullPath}`);
                 return false;
             }
-
+            
             // 获取时和分文件夹
             const hourDir = path.join(fullPath, '时');
             const minuteDir = path.join(fullPath, '分');
-
+            
             if (!fs.existsSync(hourDir) || !fs.existsSync(minuteDir)) {
-                logger.error(`时间组缺少时或分文件夹: ${fullPath}`);
+                logger.error(`时间音频组缺少时或分文件夹: ${fullPath}`);
                 return false;
             }
-
+            
             // 获取对应的音频文件
-            const hourStr = String(hour).padStart(3, '0');
-            const minuteStr = String(minute).padStart(3, '0');
-            const hourFile = path.join(hourDir, `${hourStr}.mp3`);
-            const minuteFile = path.join(minuteDir, `${minuteStr}.mp3`);
-
-            // 检查文件是否存在
+            const hourFile = path.join(hourDir, `${hour}.mp3`);
+            const minuteFile = path.join(minuteDir, `${minute}.mp3`);
+            
+            // 检查文件是否存在，不存在则使用默认值或返回失败
             if (!fs.existsSync(hourFile)) {
                 logger.error(`小时音频文件不存在: ${hourFile}`);
                 return false;
             }
-
+            
             if (!fs.existsSync(minuteFile)) {
                 logger.error(`分钟音频文件不存在: ${minuteFile}`);
                 return false;
             }
-
-            // 播放小时音频（不等待）
+            
+            // 播放小时音频
             logger.info(`播放小时音频: ${hourFile}`);
-            this.playSingleAudio(hourFile, {
-                volume: 0.8,
-                playbackRate: playbackRate || 1.0,
-                deviceId: deviceId || ''
-            });
-
-            // 播放分钟音频（不等待）
+            await this.playAudioAndWait(hourFile, deviceId, playbackRate);
+            
+            // 播放分钟音频
             logger.info(`播放分钟音频: ${minuteFile}`);
-            this.playSingleAudio(minuteFile, {
-                volume: 0.8,
-                playbackRate: playbackRate || 1.0,
-                deviceId: deviceId || ''
-            });
-
+            await this.playAudioAndWait(minuteFile, deviceId, playbackRate);
+            
             return true;
         } catch (error) {
             logger.error(`播放时间插播失败: ${error.message}`);
             return false;
         }
     }
+    
+    /**
+     * 播放音频并等待播放完成
+     * @param {string} filePath - 音频文件路径
+     * @param {string} deviceId - 设备ID
+     * @param {number} playbackRate - 播放速度
+     * @returns {Promise} 播放完成的Promise
+     */
+    async playAudioAndWait(filePath, deviceId, playbackRate) {
+        return new Promise((resolve, reject) => {
+            try {
+                // 使用播放音频的方法
+                this.playSingleAudio(filePath, {
+                    volume: 0.8,
+                    playbackRate: playbackRate || 1.0,
+                    deviceId: deviceId || ''
+                });
+                
+                // 获取音频时长
+                const getAudioDuration = () => {
+                    try {
+                        // 使用ffprobe获取音频时长
+                        const ffprobe = execSync(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${filePath}"`);
+                        const duration = parseFloat(ffprobe.toString().trim());
+                        return duration;
+                    } catch (error) {
+                        logger.error(`获取音频时长失败: ${error.message}`);
+                        // 默认返回3秒
+                        return 3;
+                    }
+                };
+                
+                // 计算等待时间 (考虑播放速度)
+                const duration = getAudioDuration();
+                const waitTime = (duration / (playbackRate || 1.0)) * 1000;
+                
+                // 等待音频播放完成
+                setTimeout(() => {
+                    resolve();
+                }, waitTime + 500); // 额外增加500ms的缓冲时间
+            } catch (error) {
+                reject(error);
+            }
+        });
+    }
 
     /**
      * 播放人数插播
      * @param {number} viewers - 观看人数
-     * @param {string} folderPath - 选定的文件夹路径
+     * @param {string} viewerGroupPath - 人数音频组路径
      * @param {string} deviceId - 设备ID
      * @param {number} playbackRate - 播放速度
      * @returns {boolean} 是否成功
      */
-    async playViewersBroadcast(viewers, folderPath, deviceId, playbackRate) {
+    async playViewersBroadcast(viewers, viewerGroupPath, deviceId, playbackRate) {
         try {
-            // folderPath已为完整相对路径，直接拼接到audioFolder
-            const fullPath = path.join(this.audioFolder, folderPath);
-
+            const fullPath = path.join(this.audioFolder, viewerGroupPath);
+            
             // 检查目录是否存在
             if (!fs.existsSync(fullPath)) {
-                logger.error(`人数组路径不存在: ${fullPath}`);
+                logger.error(`人数音频组路径不存在: ${fullPath}`);
                 return false;
             }
-
+            
             // 获取人数文件夹
             const viewerDir = path.join(fullPath, '人数');
-
+            
             if (!fs.existsSync(viewerDir)) {
                 logger.error(`人数文件夹不存在: ${viewerDir}`);
                 return false;
             }
-
+            
             // 获取对应的音频文件
             const viewerFile = path.join(viewerDir, `${viewers}.mp3`);
-
+            
             // 检查文件是否存在，不存在则尝试查找最接近的文件
             if (!fs.existsSync(viewerFile)) {
                 logger.warn(`人数音频文件不存在: ${viewerFile}，尝试查找最接近的文件`);
-
+                
                 // 获取文件夹中的所有mp3文件
                 const files = await readdir(viewerDir);
                 const mp3Files = files.filter(file => file.endsWith('.mp3'));
-
+                
                 if (mp3Files.length === 0) {
                     logger.error(`人数文件夹中没有mp3文件: ${viewerDir}`);
                     return false;
                 }
-
+                
                 // 提取文件名中的数字并查找最接近的
                 const fileNumbers = mp3Files.map(file => {
                     const num = parseInt(path.basename(file, '.mp3'));
                     return isNaN(num) ? 0 : num;
                 }).filter(num => num > 0);
-
+                
                 if (fileNumbers.length === 0) {
                     logger.error(`人数文件夹中没有有效的数字命名的mp3文件: ${viewerDir}`);
                     return false;
                 }
-
+                
                 // 查找最接近的数字
                 let closest = fileNumbers[0];
                 let minDiff = Math.abs(viewers - closest);
-
+                
                 for (let i = 1; i < fileNumbers.length; i++) {
                     const diff = Math.abs(viewers - fileNumbers[i]);
                     if (diff < minDiff) {
@@ -691,11 +746,11 @@ class VoiceAssistantService {
                         closest = fileNumbers[i];
                     }
                 }
-
+                
                 // 使用最接近的文件
                 const closestFile = path.join(viewerDir, `${closest}.mp3`);
                 logger.info(`使用最接近的人数音频文件: ${closestFile}`);
-
+                
                 // 播放人数音频
                 await this.playAudioAndWait(closestFile, deviceId, playbackRate);
             } else {
@@ -703,7 +758,7 @@ class VoiceAssistantService {
                 logger.info(`播放人数音频: ${viewerFile}`);
                 await this.playAudioAndWait(viewerFile, deviceId, playbackRate);
             }
-
+            
             return true;
         } catch (error) {
             logger.error(`播放人数插播失败: ${error.message}`);

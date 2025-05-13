@@ -513,10 +513,16 @@ class LivechatAutoControlService {
      * @param {string} message - 弹幕消息内容
      */
     processAutoReply(message) {
-        // 移除重复的过滤逻辑，统一在douyinLivechatHandler中处理
-        const matchedReply = this.replyItems.find(item => 
-          message.content.includes(item.keyword)
-        );
+        if (!this.isAutoReplyEnabled || !this.isConnected) {
+            return;
+        }
+
+        try {
+            // 自动回复由抖音窗口内的处理器完成，这里只记录日志
+            logger.debug(`收到聊天消息，转发至抖音窗口处理`);
+        } catch (error) {
+            logger.error(`处理自动回复出错: ${error.message}`);
+        }
     }
 
     /**
@@ -541,6 +547,9 @@ class LivechatAutoControlService {
         }
 
         try {
+            // 停止当前正在运行的自动回复（如果有）
+            await this.stopAutoReply();
+
             // 保存回复配置
             this.replyItems = replyItems || [];
             this.replySettings = settings || {};
@@ -551,14 +560,17 @@ class LivechatAutoControlService {
                 return false;
             }
 
+            // 启用自动回复
+            this.isAutoReplyEnabled = true;
+            logger.info('自动回复状态已设置为启用');
+
             // 准备设置参数
             const replySettings = {
                 minReplyInterval: settings.minReplyInterval !== undefined ? settings.minReplyInterval : 2000, // 默认最小间隔2秒
                 maxReplyInterval: settings.maxReplyInterval !== undefined ? settings.maxReplyInterval : 5000, // 默认最大间隔5秒
                 randomSpace: this.controlSettings.randomSpace || false, // 随机空格设置
                 randomEmoji: this.controlSettings.randomEmoji || false,  // 随机表情设置
-                delayEnabled: settings.delayEnabled !== undefined ? settings.delayEnabled : true, // 默认启用延迟
-                filterUsername: settings.filterUsername || null // 直接使用传入的过滤用户名
+                delayEnabled: settings.delayEnabled !== undefined ? settings.delayEnabled : true // 默认启用延迟
             };
 
             // 获取表情列表
@@ -568,13 +580,12 @@ class LivechatAutoControlService {
             await douyinLivechatHandler.updateConfig(
                 this.douyinWindow, 
                 this.replyItems, 
-                true, // 直接设置为启用
-                replySettings
+                this.isAutoReplyEnabled,
+                replySettings,
+                emojis
             );
 
-            // 启用自动回复
-            this.isAutoReplyEnabled = true;
-            logger.info(`已启动自动回复，共 ${this.replyItems.length} 条规则，${replySettings.delayEnabled ? `发言频率: ${replySettings.minReplyInterval}-${replySettings.maxReplyInterval}毫秒` : '无发言延迟'}，随机空格: ${replySettings.randomSpace}，随机表情: ${replySettings.randomEmoji}，过滤用户名: ${replySettings.filterUsername || '未设置'}`);
+            logger.info(`已启动自动回复，共 ${this.replyItems.length} 条规则，${replySettings.delayEnabled ? `发言频率: ${replySettings.minReplyInterval}-${replySettings.maxReplyInterval}毫秒` : '无发言延迟'}，随机空格: ${replySettings.randomSpace}，随机表情: ${replySettings.randomEmoji}`);
             return true;
         } catch (error) {
             logger.error(`启动自动回复出错: ${error.message}`);
@@ -816,40 +827,6 @@ class LivechatAutoControlService {
         const mainWindow = getMainWindow();
         if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.webContents.send('livechat-countdown', { seconds });
-        }
-    }
-
-    /**
-     * 更新过滤用户名
-     * @param {string} username - 要过滤的用户名
-     * @returns {Promise<boolean>} - 更新结果
-     */
-    async updateFilterUsername(username) {
-        try {
-            this.replySettings.filterUsername = username;
-            logger.info(`更新过滤用户名为: ${username}`);
-            
-            // 如果自动回复已启用，更新配置
-            if (this.isAutoReplyEnabled && this.douyinWindow) {
-                // 确保所有必要的设置都被传递
-                const settings = {
-                    ...this.replySettings,
-                    filterUsername: username
-                };
-                
-                await douyinLivechatHandler.updateConfig(
-                    this.douyinWindow,
-                    this.replyItems,
-                    this.isAutoReplyEnabled,
-                    settings
-                );
-                logger.info(`已更新抖音窗口过滤用户名配置`);
-            }
-            
-            return true;
-        } catch (error) {
-            logger.error(`更新过滤用户名失败: ${error.message}`);
-            return false;
         }
     }
 }

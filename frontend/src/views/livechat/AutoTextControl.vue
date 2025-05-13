@@ -220,9 +220,6 @@
                   <el-button type="danger" size="small" circle @click="deleteRow(scope.$index, scope.row)" title="删除">
                     <el-icon><Delete /></el-icon>
                   </el-button>
-                  <el-button v-if="!scope.row.editing" type="warning" size="small" circle @click="testSendMessage(scope.row)" title="测试发送">
-                    <el-icon><VideoPlay /></el-icon>
-                  </el-button>
                 </div>
               </template>
             </el-table-column>
@@ -239,7 +236,6 @@ import { useLivechatStore } from '@/stores/livechatStore';
 import { ipc } from '@/utils/ipcRenderer';
 import EmojiManager from '@/components/EmojiManager.vue';
 import { ref, reactive, computed, watch, onMounted, onActivated, inject, nextTick, onUnmounted } from 'vue';
-import { VideoPlay } from '@element-plus/icons-vue';
 
 // 配置全局默认值：限制只显示一个消息
 ElMessage.closeAll(); // 初始化时关闭所有消息
@@ -1152,24 +1148,6 @@ onUnmounted(() => {
   // 移除倒计时监听
   ipc.removeAllListeners('livechat-countdown');
 });
-
-// 测试发送消息到直播间
-const testSendMessage = async (row) => {
-  if (!row.content || row.content.trim() === '') {
-    showMessage('内容不能为空', 'warning');
-    return;
-  }
-  try {
-    const result = await ipc.invoke(ipcApiRoute.livechatAutoControl.sendMessage, { message: row.content });
-    if (result && result.status === 'success') {
-      showMessage('测试消息已发送', 'success');
-    } else {
-      showMessage(result?.message || '发送失败', 'error');
-    }
-  } catch (error) {
-    showMessage(`发送失败: ${error.message || '未知错误'}`, 'error');
-  }
-};
 </script>
 
 <style lang="less" scoped>
@@ -1445,7 +1423,7 @@ const testSendMessage = async (row) => {
   display: flex;
   justify-content: center;
   gap: 5px;
-  flex-wrap: nowrap; /* 不允许按钮换行，始终同一行 */
+  flex-wrap: wrap; /* 允许按钮换行 */
 }
 
 .time-settings {
